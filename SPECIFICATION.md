@@ -36,4 +36,27 @@ Instruction - Name - Instruction signature
 0x0E - Load bus adress into register x - 0x0E + 64a
 0x0F - Copy a to x - 0x0F
 0x10 - Copy b to x - 0x10
+0x11 - Push x to bus address - 0x11 + 64a
+0x12 - Load value into x - 0x12 + 64d
+0x13 - Copy x to a - 0x13
+0x14 - Copy x to b - 0x14
+0x15 - Load bus address into register a (using value in s as parameter) - 0x15
+0x16 - Load bus address into register b (using value in s as parameter) - 0x16
+0x17 - Copy a to s - 0x17
+0x18 - Copy b to s - 0x18
+0x19 - Copy x to s - 0x19
+0x1A - Copy s to a - 0x1A
+0x1B - Copy s to b - 0x1B
+0x1C - Copy s to x - 0x1C
+0x1D - Swap a and s - 0x1D
+0x1E - Swap b and s - 0x1E
+0x1F - Push a to bus address (using value in s as parameter) - 0x1F
+0x20 - Push b to bus address (using value in s as parameter) - 0x20
+0x21 - Load bus address into register x (using value in s as parameter) - 0x21
+0x22 - Push x to bus address (using value in s as parameter) - 0x22
+0x23 - Skip one execution if a == b
+0x24 - Skip one execution if a >= b
+0x25 - Skip one execution if a > b
+0x26 - Skip one execution if a < b
+0x27 - Skip one execution if a <= b
 ```
