@@ -1,5 +1,10 @@
-use crate::Instruction::{NoOp, LoadBusA};
-use crate::CPUError::{IllegalInstruction, OutOfInstructions};
+mod errors;
+mod instructions;
+
+use std::convert::TryInto;
+use crate::instructions::{Instruction, Instruction::*};
+use crate::errors::{CPUError, CPUError::*};
+
 
 #[cfg(test)]
 mod tests {
@@ -7,23 +12,14 @@ mod tests {
 
     #[test]
     fn it_works() {
-        use crate::*;
-        let mut cpu = CPU::new([0; 65535], vec![]);
-        let now = Instant::now();
-        loop {
-            match cpu.tick() {
-            Ok(_) => continue, // println!("TICKED!"),
-            Err(e) => {
-                eprintln!("{:?}", e);
-                break;
-            }
-            }
-        }
-        println!("{}", now.elapsed().as_secs_f64())
     }
 }
 
-pub struct CPU {
+pub fn get_version() -> &'static str {
+    env!("CARGO_PKG_VERSION")
+}
+
+pub struct Cpu {
     a: u64,
     b: u64,
     s: u64,
@@ -40,58 +36,9 @@ pub trait Device {
     fn push(&self, address: u64, value:u64);
 }
 
-enum Instruction {
-    NoOp,
-    LoadBusA(u64),
-    LoadBusB(u64),
-    Add,
-    Subtract,
-    Multiply,
-    Divide,
-    CopyAB,
-    CopyBA,
-    SwapAB,
-    PushABus(u64),
-    PushBBus(u64),
-    LoadA(u64),
-    LoadB(u64),
-    LoadBusX(u64),
-    CopyAX,
-    CopyBX,
-    PushXBus(u64),
-    LoadX(u64),
-    CopyXA,
-    CopyXB,
-    LoadBusAS,
-    LoadBusBS,
-    CopyAS,
-    CopyBS,
-    CopyXS,
-    CopySA,
-    CopySB,
-    CopySX,
-    SwapAS,
-    SwapBS,
-    PushABusS,
-    PushBBusS,
-    LoadBusXS,
-    PushXBusS,
-    SkipEq,
-    SkipGrEq,
-    SkipGr,
-    SkipLe,
-    SkipLeEq
-}
-
-#[derive(Debug)]
-pub enum CPUError{
-    IllegalInstruction(String),
-    OutOfInstructions(String)
-}
-
-impl CPU {
-    pub fn new(instructions: [u8; 65535], devices: Vec<Box<dyn Device>>) -> CPU {
-        CPU {
+impl Cpu {
+    pub fn new(instructions: [u8; 65535], devices: Vec<Box<dyn Device>>) -> Cpu {
+        Cpu {
             a: 0,
             b: 0,
             s: 0,
@@ -101,6 +48,10 @@ impl CPU {
             memory: vec![],
             devices
         }
+    }
+
+    pub fn debug(&self) -> &Cpu {
+        self
     }
 
     pub fn tick(&mut self) -> Result<(), CPUError>{
@@ -113,11 +64,14 @@ impl CPU {
             Some(i) => {
                 match i {
                     0 => Ok(NoOp),
-                    1 => Ok(LoadBusA(5)),
+                    1 => Ok(LoadBusA(self.get_args(self.x).unwrap())),
                     e => Err(IllegalInstruction(format!("{} is not a valid instruction", e)))
                 }
             }
         }
+    }
+    fn get_args(&self, start: u64) -> Result<u64, CPUError> {
+        Ok(u64::from_be_bytes(self.instructions[(start) as usize..(start+8) as usize].try_into().unwrap()))
     }
     fn process_instruction(&self, inst: Instruction) -> Result<(), CPUError> {
         Ok(())
