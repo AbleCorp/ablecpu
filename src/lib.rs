@@ -1,19 +1,12 @@
+mod debug;
 mod errors;
 mod instructions;
+mod mem;
 
 use std::convert::TryInto;
 use crate::instructions::{Instruction, Instruction::*};
 use crate::errors::{CPUError, CPUError::*};
 
-
-#[cfg(test)]
-mod tests {
-    use std::time::Instant;
-
-    #[test]
-    fn it_works() {
-    }
-}
 
 pub fn get_version() -> &'static str {
     env!("CARGO_PKG_VERSION")
@@ -26,7 +19,6 @@ pub struct Cpu {
     x: u64,
     cache: [u64; 65535],
     instructions: [u8; 65535],
-    memory: Vec<u64>,
     devices: Vec<Box<dyn Device>>
 }
 
@@ -45,7 +37,6 @@ impl Cpu {
             x: 0,
             cache: [0; 65535],
             instructions,
-            memory: vec![],
             devices
         }
     }
@@ -110,7 +101,102 @@ impl Cpu {
     fn get_args(&self, start: u64) -> Result<u64, CPUError> {
         Ok(u64::from_be_bytes(self.instructions[(start) as usize..(start+8) as usize].try_into().unwrap()))
     }
-    fn process_instruction(&self, inst: Instruction) -> Result<(), CPUError> {
-        Ok(())
+    fn process_instruction(&mut self, inst: Instruction) -> Result<(), CPUError> {
+        match inst {
+            NoOp => {Ok(())}
+            LoadBusA(arg) => {
+                match arg {
+                    0..=65535 => {
+                        self.a = self.cache[arg as usize];
+                        Ok(())
+                    }
+                    65536..=131071 => {
+                        self.a = self.instructions[arg as usize] as u64;
+                        Ok(())
+                    }
+                    addr => {
+                        let mut success = false;
+                        for device in self.devices {
+                            let (min, max) = device.get_address_space();
+                            if (min..=max).contains(&addr) {
+                                success = true;
+                                self.a = device.load(addr)
+                            }
+                        }
+                        if success {
+                            Ok(())
+                        }
+                        else {
+                            Err(IllegalAddressLoad(format!("{} is not a populated address", addr)))
+                        }
+                    }
+                }
+            }
+            LoadBusB(arg) => {
+                match arg {
+                    0..=65535 => {
+                        self.b = self.cache[arg as usize];
+                        Ok(())
+                    }
+                    65536..=131071 => {
+                        self.b = self.instructions[arg as usize] as u64;
+                        Ok(())
+                    }
+                    addr => {
+                        let mut success = false;
+                        for device in self.devices {
+                            let (min, max) = device.get_address_space();
+                            if (min..=max).contains(&addr) {
+                                success = true;
+                                self.b = device.load(addr)
+                            }
+                        }
+                        if success {
+                            Ok(())
+                        }
+                        else {
+                            Err(IllegalAddressLoad(format!("{} is not a populated address", addr)))
+                        }
+                    }
+                }
+            }
+            Add => {}
+            Subtract => {}
+            Multiply => {}
+            Divide => {}
+            CopyAB => {}
+            CopyBA => {}
+            SwapAB => {}
+            PushABus(_) => {}
+            PushBBus(_) => {}
+            LoadA(_) => {}
+            LoadB(_) => {}
+            LoadBusX(_) => {}
+            CopyAX => {}
+            CopyBX => {}
+            PushXBus(_) => {}
+            LoadX(_) => {}
+            CopyXA => {}
+            CopyXB => {}
+            LoadBusAS => {}
+            LoadBusBS => {}
+            CopyAS => {}
+            CopyBS => {}
+            CopyXS => {}
+            CopySA => {}
+            CopySB => {}
+            CopySX => {}
+            SwapAS => {}
+            SwapBS => {}
+            PushABusS => {}
+            PushBBusS => {}
+            LoadBusXS => {}
+            PushXBusS => {}
+            SkipEq => {}
+            SkipGrEq => {}
+            SkipGr => {}
+            SkipLe => {}
+            SkipLeEq => {}
+        }
     }
 }
