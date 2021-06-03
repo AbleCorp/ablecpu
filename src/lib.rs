@@ -13,10 +13,10 @@ pub fn get_version() -> &'static str {
 }
 
 pub struct Cpu {
-    a: u64,
-    b: u64,
-    s: u64,
-    x: u64,
+    reg_a: u64,
+    reg_b: u64,
+    reg_s: u64,
+    reg_x: u64,
     cache: [u64; 65535],
     instructions: [u8; 65535],
     devices: Vec<Box<dyn Device>>
@@ -31,10 +31,10 @@ pub trait Device {
 impl Cpu {
     pub fn new(instructions: [u8; 65535], devices: Vec<Box<dyn Device>>) -> Cpu {
         Cpu {
-            a: 0,
-            b: 0,
-            s: 0,
-            x: 0,
+            reg_a: 0,
+            reg_b: 0,
+            reg_s: 0,
+            reg_x: 0,
             cache: [0; 65535],
             instructions,
             devices
@@ -46,17 +46,17 @@ impl Cpu {
     }
 
     pub fn tick(&mut self) -> Result<(), CPUError>{
-        self.x += 1;
+        self.reg_x += 1;
         self.process_instruction(self.read_instruction()?)
     }
     fn read_instruction(&self) -> Result<Instruction, CPUError>{
-        match self.instructions.get((self.x - 1 )as usize) {
-            None => Err(OutOfInstructions(format!("Out of instructions at position {}", self.x))),
+        match self.instructions.get((self.reg_x - 1 )as usize) {
+            None => Err(OutOfInstructions(format!("Out of instructions at position {}", self.reg_x))),
             Some(i) => {
                 match i {
                     0 => Ok(NoOp),
-                    1 => Ok(LoadBusA(self.get_args(self.x)?)),
-                    2 => Ok(LoadBusB(self.get_args(self.x)?)),
+                    1 => Ok(LoadBusA(self.get_args(self.reg_x)?)),
+                    2 => Ok(LoadBusB(self.get_args(self.reg_x)?)),
                     3 => Ok(Add),
                     4 => Ok(Subtract),
                     5 => Ok(Multiply),
@@ -64,14 +64,14 @@ impl Cpu {
                     7 => Ok(CopyAB),
                     8 => Ok(CopyBA),
                     9 => Ok(SwapAB),
-                    10 => Ok(PushABus(self.get_args(self.x)?)),
-                    11 => Ok(PushBBus(self.get_args(self.x)?)),
-                    12 => Ok(LoadA(self.get_args(self.x)?)),
-                    13 => Ok(LoadBusX(self.get_args(self.x)?)),
+                    10 => Ok(PushABus(self.get_args(self.reg_x)?)),
+                    11 => Ok(PushBBus(self.get_args(self.reg_x)?)),
+                    12 => Ok(LoadA(self.get_args(self.reg_x)?)),
+                    13 => Ok(LoadBusX(self.get_args(self.reg_x)?)),
                     14 => Ok(CopyAX),
                     15 => Ok(CopyBX),
-                    16 => Ok(PushXBus(self.get_args(self.x)?)),
-                    17 => Ok(LoadX(self.get_args(self.x)?)),
+                    16 => Ok(PushXBus(self.get_args(self.reg_x)?)),
+                    17 => Ok(LoadX(self.get_args(self.reg_x)?)),
                     18 => Ok(CopyXA),
                     19 => Ok(CopyXB),
                     20 => Ok(LoadBusAS),
@@ -105,69 +105,45 @@ impl Cpu {
         match inst {
             NoOp => {Ok(())}
             LoadBusA(arg) => {
-                match arg {
-                    0..=65535 => {
-                        self.a = self.cache[arg as usize];
-                        Ok(())
-                    }
-                    65536..=131071 => {
-                        self.a = self.instructions[arg as usize] as u64;
-                        Ok(())
-                    }
-                    addr => {
-                        let mut success = false;
-                        for device in self.devices {
-                            let (min, max) = device.get_address_space();
-                            if (min..=max).contains(&addr) {
-                                success = true;
-                                self.a = device.load(addr)
-                            }
-                        }
-                        if success {
-                            Ok(())
-                        }
-                        else {
-                            Err(IllegalAddressLoad(format!("{} is not a populated address", addr)))
-                        }
-                    }
-                }
+                self.reg_a = self.load_base(arg)?;
+                Ok(())
             }
             LoadBusB(arg) => {
-                match arg {
-                    0..=65535 => {
-                        self.b = self.cache[arg as usize];
-                        Ok(())
-                    }
-                    65536..=131071 => {
-                        self.b = self.instructions[arg as usize] as u64;
-                        Ok(())
-                    }
-                    addr => {
-                        let mut success = false;
-                        for device in self.devices {
-                            let (min, max) = device.get_address_space();
-                            if (min..=max).contains(&addr) {
-                                success = true;
-                                self.b = device.load(addr)
-                            }
-                        }
-                        if success {
-                            Ok(())
-                        }
-                        else {
-                            Err(IllegalAddressLoad(format!("{} is not a populated address", addr)))
-                        }
-                    }
-                }
+                self.reg_b = self.load_base(arg)?;
+                Ok(())
             }
-            Add => {}
-            Subtract => {}
-            Multiply => {}
-            Divide => {}
-            CopyAB => {}
-            CopyBA => {}
-            SwapAB => {}
-            PushABus(_) => {}
+            Add => {
+                self.reg_a += self.reg_b;
+                Ok(())
+            }
+            Subtract => {
+                self.reg_a = self.reg_a - self.reg_b;
+                Ok(())
+            }
+            Multiply => {
+                self.reg_a = self.reg_a * self.reg_b;
+                Ok(())
+            }
+            Divide => {
+                self.reg_a = self.reg_a / self.reg_b;
+                Ok(())
+            }
+            CopyAB => {
+                self.reg_b = self.reg_a;
+                Ok(())
+            }
+            CopyBA => {
+                self.reg_a = self.reg_b;
+                Ok(())
+            }
+            SwapAB => {
+                std::mem::swap(&mut self.reg_a, &mut self.reg_b);
+                Ok(())
+            }
+            PushABus(arg) => {
+                self.push_base(arg, self.reg_a)?;
+                Ok(())
+            }
             PushBBus(_) => {}
             LoadA(_) => {}
             LoadB(_) => {}
@@ -197,6 +173,59 @@ impl Cpu {
             SkipGr => {}
             SkipLe => {}
             SkipLeEq => {}
+        }
+    }
+
+    fn load_base(&self, arg: u64) -> Result<u64, CPUError> {
+        match arg {
+            0..=65535 => {
+                Ok(self.cache[arg as usize])
+            }
+            65536..=131071 => {
+                Ok(self.instructions[arg as usize] as u64)
+            }
+            _ => {
+                let mut success;
+                for device in self.devices {
+                    let (min, max) = device.get_address_space();
+                    if (min..=max).contains(&arg) {
+                        success = Some(device.load(arg));
+                    }
+                }
+                if success == Some{
+                    Ok(success.unwrap())
+                }
+                else {
+                    Err(IllegalAddressLoad(format!("{} is not a populated address", arg)))
+                }
+            }
+        }
+    }
+
+    fn push_base(&mut self, arg: u64, val: u64) -> Result<(), CPUError> {
+        match arg {
+            0..=65535 => {
+                Ok(self.cache[arg as usize] = val)
+            }
+            65536..=131071 => {
+                Ok(self.instructions[arg as usize] = val as u8)
+            }
+            _ => {
+                let mut success= false;
+                for device in self.devices {
+                    let (min, max) = device.get_address_space();
+                    if (min..=max).contains(&arg) {
+                        success = true;
+                        device.push(arg, val)
+                    }
+                }
+                if success {
+                    Ok(())
+                }
+                else {
+                    Err(IllegalAddressPush(format!("{} is not a populated address", arg)))
+                }
+            }
         }
     }
 }

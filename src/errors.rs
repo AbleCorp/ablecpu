@@ -3,6 +3,6 @@ pub enum CPUError{
     IllegalInstruction(String),
     OutOfInstructions(String),
     IllegalArguments(String),
-    IllegalAddressLoad(String)
-
+    IllegalAddressLoad(String),
+    IllegalAddressPush(String)
 }
