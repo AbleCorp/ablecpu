@@ -144,35 +144,132 @@ impl Cpu {
                 self.push_base(arg, self.reg_a)?;
                 Ok(())
             }
-            PushBBus(_) => {}
-            LoadA(_) => {}
-            LoadB(_) => {}
-            LoadBusX(_) => {}
-            CopyAX => {}
-            CopyBX => {}
-            PushXBus(_) => {}
-            LoadX(_) => {}
-            CopyXA => {}
-            CopyXB => {}
-            LoadBusAS => {}
-            LoadBusBS => {}
-            CopyAS => {}
-            CopyBS => {}
-            CopyXS => {}
-            CopySA => {}
-            CopySB => {}
-            CopySX => {}
-            SwapAS => {}
-            SwapBS => {}
-            PushABusS => {}
-            PushBBusS => {}
-            LoadBusXS => {}
-            PushXBusS => {}
-            SkipEq => {}
-            SkipGrEq => {}
-            SkipGr => {}
-            SkipLe => {}
-            SkipLeEq => {}
+            PushBBus(arg) => {
+                self.push_base(arg, self.reg_b)?;
+                Ok(())
+            }
+            LoadA(arg) => {
+                self.reg_a = arg;
+                Ok(())
+            }
+            LoadB(arg) => {
+                self.reg_b = arg;
+                Ok(())
+            }
+            LoadBusX(arg) => {
+                self.reg_x = self.load_base(arg)?;
+                Ok(())
+            }
+            CopyAX => {
+                self.reg_x = self.reg_a;
+                Ok(())
+            }
+            CopyBX => {
+                self.reg_x = self.reg_b;
+                Ok(())
+            }
+            PushXBus(arg) => {
+                self.push_base(arg, self.reg_x)?;
+                Ok(())
+            }
+            LoadX(arg) => {
+                self.reg_x = arg;
+                Ok(())
+            }
+            CopyXA => {
+                self.reg_a = self.reg_x;
+                Ok(())
+            }
+            CopyXB => {
+                self.reg_b = self.reg_x;
+                Ok(())
+            }
+            LoadBusAS => {
+                self.reg_a = self.load_base(self.reg_s)?;
+                Ok(())
+            }
+            LoadBusBS => {
+                self.reg_b = self.load_base(self.reg_s)?;
+                Ok(())
+            }
+            CopyAS => {
+                self.reg_s = self.reg_a;
+                Ok(())
+            }
+            CopyBS => {
+                self.reg_s = self.reg_b;
+                Ok(())
+            }
+            CopyXS => {
+                self.reg_s = self.reg_x;
+                Ok(())
+            }
+            CopySA => {
+                self.reg_a = self.reg_s;
+                Ok(())
+            }
+            CopySB => {
+                self.reg_b = self.reg_s;
+                Ok(())
+            }
+            CopySX => {
+                self.reg_x = self.reg_s;
+                Ok(())
+            }
+            SwapAS => {
+                std::mem::swap(&mut self.reg_a, &mut self.reg_s);
+                Ok(())
+            }
+            SwapBS => {
+                std::mem::swap(&mut self.reg_b, &mut self.reg_s);
+                Ok(())
+            }
+            PushABusS => {
+                self.push_base(self.reg_s, self.reg_a);
+                Ok(())
+            }
+            PushBBusS => {
+                self.push_base(self.reg_s, self.reg_b);
+                Ok(())
+            }
+            LoadBusXS => {
+                self.reg_x = self.load_base(self.reg_s)?;
+                Ok(())
+            }
+            PushXBusS => {
+                self.push_base(self.reg_s, self.reg_x);
+                Ok(())
+            }
+            SkipEq => {
+                if self.reg_a == self.reg_b {
+                    self.reg_x += 1;
+                }
+                Ok(())
+            }
+            SkipGrEq => {
+                if self.reg_a >= self.reg_b {
+                    self.reg_x += 1;
+                }
+                Ok(())
+            }
+            SkipGr => {
+                if self.reg_a > self.reg_b {
+                    self.reg_x += 1;
+                }
+                Ok(())
+            }
+            SkipLe => {
+                if self.reg_a < self.reg_b {
+                    self.reg_x += 1;
+                }
+                Ok(())
+            }
+            SkipLeEq => {
+                if self.reg_a <= self.reg_b {
+                    self.reg_x += 1;
+                }
+                Ok(())
+            }
         }
     }
 
@@ -185,18 +282,16 @@ impl Cpu {
                 Ok(self.instructions[arg as usize] as u64)
             }
             _ => {
-                let mut success;
-                for device in self.devices {
+                let mut success = None;
+                for device in &self.devices {
                     let (min, max) = device.get_address_space();
                     if (min..=max).contains(&arg) {
                         success = Some(device.load(arg));
                     }
                 }
-                if success == Some{
-                    Ok(success.unwrap())
-                }
-                else {
-                    Err(IllegalAddressLoad(format!("{} is not a populated address", arg)))
+                match success {
+                    Some(_) => Ok(success.unwrap()),
+                    _ => Err(IllegalAddressLoad(format!("{} is not a populated address", arg)))
                 }
             }
         }
@@ -212,7 +307,7 @@ impl Cpu {
             }
             _ => {
                 let mut success= false;
-                for device in self.devices {
+                for device in &self.devices {
                     let (min, max) = device.get_address_space();
                     if (min..=max).contains(&arg) {
                         success = true;
