@@ -6,7 +6,7 @@ mod mem;
 use std::convert::TryInto;
 use crate::instructions::{Instruction, Instruction::*};
 use crate::errors::{CPUError, CPUError::*};
-
+pub use crate::debug::CpuState;
 
 pub fn get_version() -> &'static str {
     env!("CARGO_PKG_VERSION")
@@ -41,8 +41,15 @@ impl Cpu {
         }
     }
 
-    pub fn debug(&self) -> &Cpu {
-        self
+    pub fn debug(&self) -> CpuState {
+        CpuState {
+            a: self.reg_a,
+            b: self.reg_b,
+            s: self.reg_s,
+            x: self.reg_x,
+            cache: self.cache.to_vec(),
+            upcoming: self.read_instruction().unwrap()
+        }
     }
 
     pub fn tick(&mut self) -> Result<(), CPUError>{

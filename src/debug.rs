@@ -6,6 +6,5 @@ pub struct CpuState {
     pub s: u64,
     pub x: u64,
     pub cache: Vec<u64>,
-    pub upcoming: Instruction,
-    pub memory: Vec<u64>
+    pub upcoming: Instruction
 }
