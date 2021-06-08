@@ -53,11 +53,12 @@ impl Cpu {
     }
 
     pub fn tick(&mut self) -> Result<(), CPUError>{
+        self.process_instruction(self.read_instruction()?);
         self.reg_x += 1;
-        self.process_instruction(self.read_instruction()?)
+        Ok(())
     }
     fn read_instruction(&self) -> Result<Instruction, CPUError>{
-        match self.instructions.get((self.reg_x - 1 )as usize) {
+        match self.instructions.get((self.reg_x)as usize) {
             None => Err(OutOfInstructions(format!("Out of instructions at position {}", self.reg_x))),
             Some(i) => {
                 match i {
