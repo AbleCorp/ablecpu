@@ -53,7 +53,7 @@ impl Cpu {
     }
 
     pub fn tick(&mut self) -> Result<(), CPUError>{
-        self.process_instruction(self.read_instruction()?);
+        self.process_instruction(self.read_instruction()?)?;
         self.reg_x += 1;
         Ok(())
     }
@@ -125,15 +125,15 @@ impl Cpu {
                 Ok(())
             }
             Subtract => {
-                self.reg_a = self.reg_a - self.reg_b;
+                self.reg_a -= self.reg_b;
                 Ok(())
             }
             Multiply => {
-                self.reg_a = self.reg_a * self.reg_b;
+                self.reg_a *= self.reg_b;
                 Ok(())
             }
             Divide => {
-                self.reg_a = self.reg_a / self.reg_b;
+                self.reg_a /= self.reg_b;
                 Ok(())
             }
             CopyAB => {
@@ -233,11 +233,11 @@ impl Cpu {
                 Ok(())
             }
             PushABusS => {
-                self.push_base(self.reg_s, self.reg_a);
+                self.push_base(self.reg_s, self.reg_a)?;
                 Ok(())
             }
             PushBBusS => {
-                self.push_base(self.reg_s, self.reg_b);
+                self.push_base(self.reg_s, self.reg_b)?;
                 Ok(())
             }
             LoadBusXS => {
@@ -245,7 +245,7 @@ impl Cpu {
                 Ok(())
             }
             PushXBusS => {
-                self.push_base(self.reg_s, self.reg_x);
+                self.push_base(self.reg_s, self.reg_x)?;
                 Ok(())
             }
             SkipEq => {
@@ -308,10 +308,12 @@ impl Cpu {
     fn push_base(&mut self, arg: u64, val: u64) -> Result<(), CPUError> {
         match arg {
             0..=65535 => {
-                Ok(self.cache[arg as usize] = val)
+                self.cache[arg as usize] = val;
+                Ok(())
             }
             65536..=131071 => {
-                Ok(self.instructions[arg as usize] = val as u8)
+                self.instructions[arg as usize] = val as u8;
+                Ok(())
             }
             _ => {
                 let mut success= false;
