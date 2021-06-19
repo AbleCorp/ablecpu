@@ -107,7 +107,7 @@ impl Cpu {
         }
     }
     fn get_args(&self, start: u64) -> Result<u64, CPUError> {
-        Ok(u64::from_be_bytes(self.instructions[(start) as usize..(start+8) as usize].try_into().unwrap()))
+        Ok(u64::from_be_bytes(self.instructions[(start+1) as usize..(start+9) as usize].try_into().unwrap()))
     }
     fn process_instruction(&mut self, inst: Instruction) -> Result<(), CPUError> {
         match inst {

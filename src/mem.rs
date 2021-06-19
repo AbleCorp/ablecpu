@@ -14,7 +14,7 @@ impl Memory {
 
 impl Device for Memory {
     fn get_address_space(&self) -> (u64, u64) {
-        todo!()
+        (131072, 131072)
     }
 
     fn load(&self, address: u64) -> u64 {

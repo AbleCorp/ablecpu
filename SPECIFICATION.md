@@ -9,10 +9,10 @@ U-RISC has two general purpose registers; A and B. Additionally there is a X reg
 The S register is used for dynamic parameters in instructions, and is not intended as a buffer.
 Depending on the settings the first 8-64 addresses of the cache are also implemented as registers.
 ## Bus Design
-The bus is equipped with a total of 2^64 addresses. The addresses from 0 to 131071 are per core (also referred to as "Privat Bus").\
-The addresses from 0 to 65,535 hold 64d values representing data that can be used by the processor. \
-Addresses from 65536 to 131071 store 8 bit values representing instructions and their arguments. \
-The address 131072 is used for maybe existing RAM, technically its seen as a device, but it wil always be at address 171072. \
+The bus is equipped with a total of 2^64 addresses. The addresses from 0 to 131071 (2^17-1) are per core (also referred to as "Privat Bus").\
+The addresses from 0 to 65,535 (2^16-1)hold 64d values representing data that can be used by the processor. \
+Addresses from 65536 (2^16)to 131071 (2^17-1)store 8 bit values representing instructions and their arguments. \
+The address 131072 (2^17)is used for maybe existing RAM, technically its seen as a device, but it wil always be at address 171072 (2^17). \
 Any address above may or may not be populated with devices.
 ## Miscellaneous
 - Instructions are 8 bits long (5 bits currently used) and all data and addresses are 64 bits long
