@@ -41,7 +41,7 @@ impl Cpu {
         }
     }
 
-    pub fn debug(&mut self) -> CpuState {
+    pub fn debug(&self) -> CpuState {
         CpuState {
             a: self.reg_a,
             b: self.reg_b,
@@ -53,12 +53,11 @@ impl Cpu {
     }
 
     pub fn tick(&mut self) -> Result<(), CPUError>{
-        let instruction = self.read_instruction()?;
-        self.process_instruction(instruction)?;
+        self.process_instruction(self.read_instruction()?)?;
         self.reg_x += 1;
         Ok(())
     }
-    fn read_instruction(&mut self) -> Result<Instruction, CPUError>{
+    fn read_instruction(&self) -> Result<Instruction, CPUError>{
         match self.instructions.get((self.reg_x)as usize) {
             None => Err(OutOfInstructions(format!("Out of instructions at position {}", self.reg_x))),
             Some(i) => {
@@ -107,9 +106,9 @@ impl Cpu {
             }
         }
     }
-    fn get_args(&mut self, start: u64) -> Result<u64, CPUError> {
-        self.reg_x += 8;
+    fn get_args(&self, start: u64) -> Result<u64, CPUError> {
         Ok(u64::from_be_bytes(self.instructions[(start+1) as usize..(start+9) as usize].try_into().unwrap()))
+
     }
     fn process_instruction(&mut self, inst: Instruction) -> Result<(), CPUError> {
         match inst {
