@@ -345,6 +345,6 @@ impl Cpu {
     }
 
     fn arg_skip(&mut self) {
-        self.reg_x += 8;
+        self.reg_x += 7;
     }
 }
