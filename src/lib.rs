@@ -107,6 +107,7 @@ impl Cpu {
         }
     }
     fn get_args(&self, start: u64) -> Result<u64, CPUError> {
+        println!("{:?}", self.instructions[(start+1) as usize..(start+9) as usize]);
         Ok(u64::from_be_bytes(self.instructions[(start+1) as usize..(start+9) as usize].try_into().unwrap()))
 
     }
