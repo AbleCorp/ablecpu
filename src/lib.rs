@@ -115,10 +115,12 @@ impl Cpu {
             NoOp => {Ok(())}
             LoadBusA(arg) => {
                 self.reg_a = self.load_base(arg)?;
+                self.arg_skip();
                 Ok(())
             }
             LoadBusB(arg) => {
                 self.reg_b = self.load_base(arg)?;
+                self.arg_skip();
                 Ok(())
             }
             Add => {
@@ -151,22 +153,27 @@ impl Cpu {
             }
             PushABus(arg) => {
                 self.push_base(arg, self.reg_a)?;
+                self.arg_skip();
                 Ok(())
             }
             PushBBus(arg) => {
                 self.push_base(arg, self.reg_b)?;
+                self.arg_skip();
                 Ok(())
             }
             LoadA(arg) => {
                 self.reg_a = arg;
+                self.arg_skip();
                 Ok(())
             }
             LoadB(arg) => {
                 self.reg_b = arg;
+                self.arg_skip();
                 Ok(())
             }
             LoadBusX(arg) => {
                 self.reg_x = self.load_base(arg)?;
+                self.arg_skip();
                 Ok(())
             }
             CopyAX => {
@@ -179,10 +186,12 @@ impl Cpu {
             }
             PushXBus(arg) => {
                 self.push_base(arg, self.reg_x)?;
+                self.arg_skip();
                 Ok(())
             }
             LoadX(arg) => {
                 self.reg_x = arg;
+                self.arg_skip();
                 Ok(())
             }
             CopyXA => {
@@ -333,5 +342,9 @@ impl Cpu {
                 }
             }
         }
+    }
+
+    fn arg_skip(&mut self) {
+        self.reg_x += 8;
     }
 }
