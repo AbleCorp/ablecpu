@@ -1,8 +1,10 @@
-use crate::print_help;
 use std::fs::File;
-use std::io::Read;
-use u_risc_interpreter::{Cpu, CpuState};
 use std::io;
+use std::io::Read;
+
+use ableCPU_vm::{Cpu, CpuState};
+
+use crate::print_help;
 
 pub fn main(args: Vec<String>, mut file: File) {
     let mut bin: [u8; 65535] = [0; 65535];

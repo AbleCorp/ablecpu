@@ -1,4 +1,4 @@
-use u_risc_interpreter::Device;
+use ableCPU_vm::Device;
 
 pub(crate) struct TerminalOut {
 
