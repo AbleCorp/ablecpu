@@ -1,0 +1,10 @@
+[package]
+name = "u_risc_launcher"
+version = "0.1.0"
+authors = ["blackfur <64478051+theblackfurguy@users.noreply.github.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+u_risc_interpreter = {path= "..", branch="main", version = "0.1.0"}

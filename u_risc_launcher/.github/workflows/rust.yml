@@ -1,0 +1,51 @@
+name: Rust
+
+on:
+  push:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-test:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build
+      run: cargo build --verbose
+    - name: Run tests
+      run: cargo test --verbose
+
+  rust-fmt:
+    
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    - name: Rustfmt
+      run: rustfmt
+    - uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        commit_message: Swoosh! Cleaned the Code
+  
+  release-build:
+    
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    - name: Release Build
+      run: cargo build --release
+    - name: Release Unstable
+      uses: "marvinpinto/action-automatic-releases@latest"
+      with:
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+        automatic_release_tag: "unstable"
+        prerelease: true
+        title: "Development Build"
+        files: target/release/u_risc_launcher
+      
+    
