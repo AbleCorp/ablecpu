@@ -1,2 +1,2 @@
-# u_risc_interpreter
-A interpreter (VM) for the U-RISC instruction-set
+# U-RISC
+This is a repo containing both the library and the launcher for the U-RISC emulator (vm)
