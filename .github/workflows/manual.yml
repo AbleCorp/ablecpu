@@ -31,7 +31,7 @@ jobs:
           command: build
           args: --release
       - name: PLSPLS
-        run: ls
+        run: ls target
       - name: Upload
         uses: actions/upload-artifact@v2.2.4
         with:
