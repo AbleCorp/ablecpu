@@ -35,5 +35,5 @@ jobs:
       - name: Upload
         uses: actions/upload-artifact@v2.2.4
         with:
-          path: target/release/u_risc_launcher
+          path: target\release\u_risc_launcher
               
