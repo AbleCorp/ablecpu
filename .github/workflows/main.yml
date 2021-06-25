@@ -34,7 +34,12 @@ jobs:
           command: build
           args: --release
       - name: Release Unstable
-        uses: elgohr/Github-Release-Action@v3.1
+        uses: "marvinpinto/action-automatic-releases@latest"
         with:
-          release: unstable
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "unstable"
+          prerelease: true
+          title: "Development Build"
+          files: target/release/ablecpu_launcher
+        
               
