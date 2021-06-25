@@ -42,7 +42,7 @@ jobs:
           title: "Development Build"
           files: target/release/ablecpu_launcher
   auto_format:
-    runs-on: ubuntu_latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Install Rust
