@@ -1,12 +1,13 @@
+use std::convert::TryInto;
+
+pub use crate::debug::CpuState;
+use crate::errors::{CPUError, CPUError::*};
+use crate::instructions::{Instruction, Instruction::*};
+
 mod debug;
 mod errors;
 mod instructions;
 mod mem;
-
-use std::convert::TryInto;
-use crate::instructions::{Instruction, Instruction::*};
-use crate::errors::{CPUError, CPUError::*};
-pub use crate::debug::CpuState;
 
 pub fn get_version() -> &'static str {
     env!("CARGO_PKG_VERSION")

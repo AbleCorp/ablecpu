@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io;
 use std::io::Read;
 
-use ableCPU_vm::{Cpu, CpuState};
+use ablecpu_vm::{Cpu, CpuState};
 
 use crate::print_help;
 

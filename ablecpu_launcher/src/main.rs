@@ -22,7 +22,7 @@ fn main() {
 
 fn print_help(err: &str) -> ! {
     println!("{}", err);
-    println!("U-RISC-LAUNCHER v{} using U-RISC-INTERPRETER v{}\nAvailable commands:\n  run FILENAME\n  debug FILENAME", env!("CARGO_PKG_VERSION"), ableCPU_vm::get_version());
+    println!("U-RISC-LAUNCHER v{} using U-RISC-INTERPRETER v{}\nAvailable commands:\n  run FILENAME\n  debug FILENAME", env!("CARGO_PKG_VERSION"), ablecpu_vm::get_version());
     std::process::exit(1)
 }
 

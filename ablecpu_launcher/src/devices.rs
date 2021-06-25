@@ -1,4 +1,4 @@
-use ableCPU_vm::Device;
+use ablecpu_vm::Device;
 
 pub(crate) struct TerminalOut {
 
