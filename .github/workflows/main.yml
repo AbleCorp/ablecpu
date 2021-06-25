@@ -15,7 +15,7 @@ jobs:
         uses: actions-rs/toolchain@v1.0.6
         with:
           toolchain: stable
-          components: rustfmt, clippy
+          components: clippy
       - name: Build Debug
         uses: actions-rs/cargo@v1.0.1
         with:
@@ -33,4 +33,8 @@ jobs:
         with:
           command: build
           args: --release
+      - name: Release Unstable
+        uses: elgohr/Github-Release-Action@v3.1
+        with:
+          release: unstable
               
