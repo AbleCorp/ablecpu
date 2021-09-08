@@ -1,8 +1,9 @@
 use std::convert::TryInto;
 
 pub use crate::debug::CpuState;
-use crate::errors::{CPUError, CPUError::*};
-use crate::instructions::{Instruction, Instruction::*};
+use crate::errors::{CPUError};
+use crate::instructions::{Instruction};
+use crate::mem::InstructionCache;
 
 mod debug;
 mod errors;
@@ -14,339 +15,45 @@ pub fn get_version() -> &'static str {
 }
 
 pub struct Cpu {
-    reg_a: u64,
-    reg_b: u64,
-    reg_s: u64,
     reg_x: u64,
-    cache: [u64; 65535],
-    instructions: [u8; 65535],
-    devices: Vec<Box<dyn Device>>
+    ect: [u64; 32],
+    cache: [u64; 65504],
+    instructions: InstructionCache,
+    devices: Vec<Box<dyn Device>>,
 }
 
 pub trait Device {
     fn get_address_space(&self) -> (u64, u64);
-    fn load(&self, address: u64) -> u64;
-    fn push(&self, address: u64, value:u64);
+    fn load(&mut self, address: u64) -> Result<u64, CPUError>;
+    fn push(&mut self, address: u64, value:u64) -> Result<(), CPUError>;
 }
 
 impl Cpu {
-    pub fn new(instructions: [u8; 65535], devices: Vec<Box<dyn Device>>) -> Cpu {
+    pub fn new(ect: Option<[u64; 32]>, cache: Option<[u64; 65504]>, instructions: [u8; 196605], devices: Vec<Box<dyn Device>>) -> Cpu {
         Cpu {
-            reg_a: 0,
-            reg_b: 0,
-            reg_s: 0,
             reg_x: 0,
-            cache: [0; 65535],
-            instructions,
-            devices
+            ect: match ect {
+                Some(ect) => ect,
+                None => [0; 32],
+            },
+            cache: match cache {
+                Some(cache) => cache,
+                None => [0; 65504],
+            },
+            instructions: InstructionCache::new(instructions),
+            devices,
         }
     }
 
-    pub fn debug(&self) -> CpuState {
-        CpuState {
-            a: self.reg_a,
-            b: self.reg_b,
-            s: self.reg_s,
-            x: self.reg_x,
-            cache: self.cache.to_vec(),
-            upcoming: self.read_instruction().unwrap()
-        }
-    }
-
-    pub fn tick(&mut self) -> Result<(), CPUError>{
-        self.process_instruction(self.read_instruction()?)?;
-        self.reg_x += 1;
+    pub fn tick(&mut self) -> Result<(), CPUError> {
+        let inst = self.read_instruction(self.reg_x);
         Ok(())
     }
-    fn read_instruction(&self) -> Result<Instruction, CPUError>{
-        match self.instructions.get((self.reg_x)as usize) {
-            None => Err(OutOfInstructions(format!("Out of instructions at position {}", self.reg_x))),
-            Some(i) => {
-                match i {
-                    0 => Ok(NoOp),
-                    1 => Ok(LoadBusA(self.get_args(self.reg_x)?)),
-                    2 => Ok(LoadBusB(self.get_args(self.reg_x)?)),
-                    3 => Ok(Add),
-                    4 => Ok(Subtract),
-                    5 => Ok(Multiply),
-                    6 => Ok(Divide),
-                    7 => Ok(CopyAB),
-                    8 => Ok(CopyBA),
-                    9 => Ok(SwapAB),
-                    10 => Ok(PushABus(self.get_args(self.reg_x)?)),
-                    11 => Ok(PushBBus(self.get_args(self.reg_x)?)),
-                    12 => Ok(LoadA(self.get_args(self.reg_x)?)),
-                    13 => Ok(LoadB(self.get_args(self.reg_x)?)),
-                    14 => Ok(LoadBusX(self.get_args(self.reg_x)?)),
-                    15 => Ok(CopyAX),
-                    16 => Ok(CopyBX),
-                    17 => Ok(PushXBus(self.get_args(self.reg_x)?)),
-                    18 => Ok(LoadX(self.get_args(self.reg_x)?)),
-                    19 => Ok(CopyXA),
-                    20 => Ok(CopyXB),
-                    21 => Ok(LoadBusAS),
-                    22 => Ok(LoadBusBS),
-                    23 => Ok(CopyAS),
-                    24 => Ok(CopyBS),
-                    25 => Ok(CopyXS),
-                    26 => Ok(CopySA),
-                    27 => Ok(CopySB),
-                    28 => Ok(CopySX),
-                    29 => Ok(SwapAS),
-                    30 => Ok(SwapBS),
-                    31 => Ok(PushABusS),
-                    32 => Ok(PushBBusS),
-                    33 => Ok(LoadBusXS),
-                    34 => Ok(PushXBusS),
-                    35 => Ok(SkipEq),
-                    36 => Ok(SkipGrEq),
-                    37 => Ok(SkipGr),
-                    38 => Ok(SkipLe),
-                    39 => Ok(SkipLeEq),
-                    e => Err(IllegalInstruction(format!("{} is not a valid instruction", e)))
-                }
-            }
-        }
-    }
-    fn get_args(&self, start: u64) -> Result<u64, CPUError> {
-        Ok(u64::from_be_bytes(self.instructions[(start+1) as usize..(start+9) as usize].try_into().unwrap()))
 
-    }
-    fn process_instruction(&mut self, inst: Instruction) -> Result<(), CPUError> {
-        match inst {
-            NoOp => {Ok(())}
-            LoadBusA(arg) => {
-                self.reg_a = self.load_base(arg)?;
-                self.arg_skip();
-                Ok(())
-            }
-            LoadBusB(arg) => {
-                self.reg_b = self.load_base(arg)?;
-                self.arg_skip();
-                Ok(())
-            }
-            Add => {
-                self.reg_a += self.reg_b;
-                Ok(())
-            }
-            Subtract => {
-                self.reg_a -= self.reg_b;
-                Ok(())
-            }
-            Multiply => {
-                self.reg_a *= self.reg_b;
-                Ok(())
-            }
-            Divide => {
-                self.reg_a /= self.reg_b;
-                Ok(())
-            }
-            CopyAB => {
-                self.reg_b = self.reg_a;
-                Ok(())
-            }
-            CopyBA => {
-                self.reg_a = self.reg_b;
-                Ok(())
-            }
-            SwapAB => {
-                std::mem::swap(&mut self.reg_a, &mut self.reg_b);
-                Ok(())
-            }
-            PushABus(arg) => {
-                self.push_base(arg, self.reg_a)?;
-                self.arg_skip();
-                Ok(())
-            }
-            PushBBus(arg) => {
-                self.push_base(arg, self.reg_b)?;
-                self.arg_skip();
-                Ok(())
-            }
-            LoadA(arg) => {
-                self.reg_a = arg;
-                self.arg_skip();
-                Ok(())
-            }
-            LoadB(arg) => {
-                self.reg_b = arg;
-                self.arg_skip();
-                Ok(())
-            }
-            LoadBusX(arg) => {
-                self.reg_x = self.load_base(arg)?;
-                self.arg_skip();
-                Ok(())
-            }
-            CopyAX => {
-                self.reg_x = self.reg_a;
-                Ok(())
-            }
-            CopyBX => {
-                self.reg_x = self.reg_b;
-                Ok(())
-            }
-            PushXBus(arg) => {
-                self.push_base(arg, self.reg_x)?;
-                self.arg_skip();
-                Ok(())
-            }
-            LoadX(arg) => {
-                self.reg_x = arg;
-                self.arg_skip();
-                Ok(())
-            }
-            CopyXA => {
-                self.reg_a = self.reg_x;
-                Ok(())
-            }
-            CopyXB => {
-                self.reg_b = self.reg_x;
-                Ok(())
-            }
-            LoadBusAS => {
-                self.reg_a = self.load_base(self.reg_s)?;
-                Ok(())
-            }
-            LoadBusBS => {
-                self.reg_b = self.load_base(self.reg_s)?;
-                Ok(())
-            }
-            CopyAS => {
-                self.reg_s = self.reg_a;
-                Ok(())
-            }
-            CopyBS => {
-                self.reg_s = self.reg_b;
-                Ok(())
-            }
-            CopyXS => {
-                self.reg_s = self.reg_x;
-                Ok(())
-            }
-            CopySA => {
-                self.reg_a = self.reg_s;
-                Ok(())
-            }
-            CopySB => {
-                self.reg_b = self.reg_s;
-                Ok(())
-            }
-            CopySX => {
-                self.reg_x = self.reg_s;
-                Ok(())
-            }
-            SwapAS => {
-                std::mem::swap(&mut self.reg_a, &mut self.reg_s);
-                Ok(())
-            }
-            SwapBS => {
-                std::mem::swap(&mut self.reg_b, &mut self.reg_s);
-                Ok(())
-            }
-            PushABusS => {
-                self.push_base(self.reg_s, self.reg_a)?;
-                Ok(())
-            }
-            PushBBusS => {
-                self.push_base(self.reg_s, self.reg_b)?;
-                Ok(())
-            }
-            LoadBusXS => {
-                self.reg_x = self.load_base(self.reg_s)?;
-                Ok(())
-            }
-            PushXBusS => {
-                self.push_base(self.reg_s, self.reg_x)?;
-                Ok(())
-            }
-            SkipEq => {
-                if self.reg_a == self.reg_b {
-                    self.reg_x += 1;
-                }
-                Ok(())
-            }
-            SkipGrEq => {
-                if self.reg_a >= self.reg_b {
-                    self.reg_x += 1;
-                }
-                Ok(())
-            }
-            SkipGr => {
-                if self.reg_a > self.reg_b {
-                    self.reg_x += 1;
-                }
-                Ok(())
-            }
-            SkipLe => {
-                if self.reg_a < self.reg_b {
-                    self.reg_x += 1;
-                }
-                Ok(())
-            }
-            SkipLeEq => {
-                if self.reg_a <= self.reg_b {
-                    self.reg_x += 1;
-                }
-                Ok(())
-            }
+    fn read_instruction(&self, reg_x: u64) -> Result<(), CPUError> {
+        match self.instructions {
+            
         }
-    }
-
-    fn load_base(&self, arg: u64) -> Result<u64, CPUError> {
-        match arg {
-            0..=65535 => {
-                Ok(self.cache[arg as usize])
-            }
-            65536..=131071 => {
-                Ok(self.instructions[arg as usize] as u64)
-            }
-            _ => {
-                let mut success = None;
-                for device in &self.devices {
-                    let (min, max) = device.get_address_space();
-                    if (min..=max).contains(&arg) {
-                        success = Some(device.load(arg));
-                    }
-                }
-                match success {
-                    Some(_) => Ok(success.unwrap()),
-                    _ => Err(IllegalAddressLoad(format!("{} is not a populated address", arg)))
-                }
-            }
-        }
-    }
-
-    fn push_base(&mut self, arg: u64, val: u64) -> Result<(), CPUError> {
-        match arg {
-            0..=65535 => {
-                self.cache[arg as usize] = val;
-                Ok(())
-            }
-            65536..=131071 => {
-                self.instructions[arg as usize] = val as u8;
-                Ok(())
-            }
-            _ => {
-                let mut success= false;
-                for device in &self.devices {
-                    let (min, max) = device.get_address_space();
-                    if (min..=max).contains(&arg) {
-                        success = true;
-                        device.push(arg, val)
-                    }
-                }
-                if success {
-                    Ok(())
-                }
-                else {
-                    Err(IllegalAddressPush(format!("{} is not a populated address", arg)))
-                }
-            }
-        }
-    }
-
-    fn arg_skip(&mut self) {
-        self.reg_x += 8;
+        Ok(())
     }
 }
