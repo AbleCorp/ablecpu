@@ -21,8 +21,11 @@ impl Device for InstructionCache {
         let index = address - 65537;
         if index % 3 == 0 {
             Ok(*self.instructions.get(index as usize).unwrap_or(return Err(CPUError::OutOfInstructions)) as u64)
-        } else if index +1 % 3 == 0 {
-            self
+        } else if index + 1 % 3 == 0 {
+            self.instructions.split_at(index as usize);
+            Ok(0)
+        } else if index + 2 % 3 == 0 {
+            self.instructions.split_at(index as usize)
         }
     }
 
