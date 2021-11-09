@@ -1,10 +1,10 @@
 [package]
 name = "ablecpu_launcher"
-version = "0.4.0"
+version = "0.7.0"
 authors = ["blackfur <64478051+theblackfurguy@users.noreply.github.com>"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ablecpu_vm = {path= "../ablecpu_vm", version = "0.4.0"}
+ablecpu_vm = {path= "../ablecpu_vm", version = "0.7.0"}
