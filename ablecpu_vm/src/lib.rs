@@ -12,7 +12,6 @@ pub struct InstructionCache {
 
 impl InstructionCache {
     fn new(raw: Box<[u8]>) -> InstructionCache {
-        println!("This still worked! 3");
         let mut i: usize = 0;
         let mut assembled: Box<[(u8, u64, u64)]> = vec![(0, 0, 0); 21845].into_boxed_slice();
         while i<371365 {
@@ -22,8 +21,6 @@ impl InstructionCache {
             assembled[i / 17] = (inst, arg_one, arg_two);
             i+=17;
         }
-
-        println!("This still worked! 4");
 
         InstructionCache {
             instructions: assembled,
@@ -40,7 +37,6 @@ pub struct Cpu {
 
 impl Cpu {
     pub fn new(instructions: Box<[u8]>) -> Cpu{
-        println!("This still worked! 2");
         Cpu{
             reg_zero: 65536,
             data_cache: [0; 65535],
@@ -53,9 +49,7 @@ impl Cpu {
 mod tests {
     #[test]
     fn it_works() {
-        println!("This still worked! 1");
         let test_cpu = super::Cpu::new(vec![0; 371365].into_boxed_slice());
-        
 
         println!("{:?}", test_cpu.instruction_cache.instructions[0]);
     }
