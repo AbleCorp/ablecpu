@@ -1,59 +1,50 @@
 use std::convert::TryInto;
 
-pub use crate::debug::CpuState;
-use crate::errors::{CPUError};
-use crate::instructions::{Instruction};
-use crate::mem::InstructionCache;
-
-mod debug;
-mod errors;
 mod instructions;
-mod mem;
 
 pub fn get_version() -> &'static str {
     env!("CARGO_PKG_VERSION")
 }
 
-pub struct Cpu {
-    reg_x: u64,
-    ect: [u64; 32],
-    cache: [u64; 65504],
-    instructions: InstructionCache,
-    devices: Vec<Box<dyn Device>>,
+struct InstructionCache {
+    instructions: [(u8, u64, u64); 21845],
 }
 
-pub trait Device {
-    fn get_address_space(&self) -> (u64, u64);
-    fn load(&mut self, address: u64) -> Result<u64, CPUError>;
-    fn push(&mut self, address: u64, value:u64) -> Result<(), CPUError>;
+impl InstructionCache {
+    fn new(raw: [u8; 371365]) -> InstructionCache {
+        let mut i: usize = 0;
+        let mut assembled: [(u8, u64, u64); 21845] = [(0, 0, 0); 21845];
+        while i<371365 {
+            let inst = raw[i];
+            let arg_one = u64::from_be_bytes(raw[i+1..=i+8].try_into().unwrap());
+            let arg_two = u64::from_be_bytes(raw[i+9..=i+16].try_into().unwrap());
+            assembled[i / 17] = (inst, arg_one, arg_two);
+        }
+
+        InstructionCache {
+            instructions: assembled,
+        }
+    }
+}
+
+pub struct Cpu {
+    reg_zero: u64,
+    data_cache: [u64; 65535],
+    instruction_cache: InstructionCache,
+    devices: Vec<Box<dyn Device>>
 }
 
 impl Cpu {
-    pub fn new(ect: Option<[u64; 32]>, cache: Option<[u64; 65504]>, instructions: [u8; 196605], devices: Vec<Box<dyn Device>>) -> Cpu {
-        Cpu {
-            reg_x: 0,
-            ect: match ect {
-                Some(ect) => ect,
-                None => [0; 32],
-            },
-            cache: match cache {
-                Some(cache) => cache,
-                None => [0; 65504],
-            },
-            instructions: InstructionCache::new(instructions),
-            devices,
+    pub fn new(instructions: [u8; 371365]) -> Cpu{
+        Cpu{
+            reg_zero: 65536,
+            data_cache: [0; 65535],
+            instruction_cache: InstructionCache::new(instructions),
+            devices: Vec::new(),
         }
     }
+}
 
-    pub fn tick(&mut self) -> Result<(), CPUError> {
-        let inst = self.read_instruction(self.reg_x);
-        Ok(())
-    }
+pub trait Device {
 
-    fn read_instruction(&self, reg_x: u64) -> Result<(), CPUError> {
-        match self.instructions {
-            
-        }
-        Ok(())
-    }
 }
