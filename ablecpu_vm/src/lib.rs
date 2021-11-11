@@ -26,6 +26,22 @@ impl InstructionCache {
             instructions: assembled,
         }
     }
+
+    pub fn get(&self, index: u64) -> u64 {
+        match index % 3 {
+            0 => self.instructions[(index/3) as usize].0 as u64,
+            1 => self.instructions[(index/3) as usize].1,
+            _ => self.instructions[(index/3) as usize].2,
+        }
+    }
+
+    pub fn set(&mut self, index: u64, value: u64) {
+        match index % 3 {
+            0 => self.instructions[(index/3) as usize].0 = value as u8,
+            1 => self.instructions[(index/3) as usize].1 = value,
+            _ => self.instructions[(index/3) as usize].2 = value,
+        }
+    }
 }
 
 pub struct Cpu {
@@ -49,8 +65,11 @@ impl Cpu {
 mod tests {
     #[test]
     fn it_works() {
-        let test_cpu = super::Cpu::new(vec![0; 371365].into_boxed_slice());
+        let mut cstm_vec: Vec<u8> = vec![1, 0, 0, 0, 0, 0, 0, 0, 8];
+        let mut fill_vec: Vec<u8> = vec![0; 371356];
+        cstm_vec.append(&mut fill_vec);
 
+        let test_cpu = super::Cpu::new(cstm_vec.into_boxed_slice());
         println!("{:?}", test_cpu.instruction_cache.instructions[0]);
     }
 }
