@@ -1,5 +1,7 @@
 use std::convert::TryInto;
 
+use instructions::Instruction;
+
 mod instructions;
 
 pub fn get_version() -> &'static str {
@@ -7,7 +9,7 @@ pub fn get_version() -> &'static str {
 }
 
 pub struct InstructionCache {
-    pub instructions: Box<[(u8, u64, u64)]>,
+    instructions: Box<[(u8, u64, u64)]>,
 }
 
 impl InstructionCache {
@@ -59,6 +61,14 @@ impl Cpu {
             instruction_cache: InstructionCache::new(instructions),
             devices: Vec::new(),
         }
+    }
+
+    pub fn tick(&self) {
+
+    }
+
+    fn get_instruction(&self, index: u64) -> Instruction {
+        
     }
 }
 
