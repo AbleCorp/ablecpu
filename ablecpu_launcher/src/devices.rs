@@ -1,12 +1,8 @@
 use ablecpu_vm::Device;
 
-pub(crate) struct TerminalOut {
+pub(crate) struct TerminalOut {}
 
-}
-
-pub(crate) struct TerminalIn {
-
-}
+pub(crate) struct TerminalIn {}
 
 impl Device for TerminalOut {
     fn get_address_space(&self) -> (u64, u64) {

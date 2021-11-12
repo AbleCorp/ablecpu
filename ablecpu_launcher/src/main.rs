@@ -1,9 +1,9 @@
 use std::env;
 use std::fs::File;
 
-mod run;
 mod debug;
 mod devices;
+mod run;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -12,10 +12,11 @@ fn main() {
         Some(command) => {
             let file = find_file(&args);
             match command.as_str() {
-            "run" => {run::main(args, file)}
-            "debug" => {debug::main(args, file)}
-            _ => {print_help("")}
-        }}
+                "run" => run::main(args, file),
+                "debug" => debug::main(args, file),
+                _ => print_help(""),
+            }
+        }
     }
     std::process::exit(0)
 }
@@ -26,14 +27,14 @@ fn print_help(err: &str) -> ! {
     std::process::exit(1)
 }
 
-fn find_file(args: &[String]) -> File{
+fn find_file(args: &[String]) -> File {
     match args.get(2) {
-        None => { print_help("ERROR: Please enter a filename after the command"); },
-        Some(filename) => {
-            match File::open(filename) {
-                Ok(file) => file,
-                Err(e) => print_help(&format!("ERROR: error while opening specified file {}", e))
-            }
+        None => {
+            print_help("ERROR: Please enter a filename after the command");
         }
+        Some(filename) => match File::open(filename) {
+            Ok(file) => file,
+            Err(e) => print_help(&format!("ERROR: error while opening specified file {}", e)),
+        },
     }
 }

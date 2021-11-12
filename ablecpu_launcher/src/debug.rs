@@ -10,8 +10,10 @@ use crate::print_help;
 pub fn main(args: Vec<String>, mut file: File) {
     let mut bin: [u8; 65535] = [0; 65535];
     match file.read(&mut bin) {
-        Ok(_) => {println!("Opened file successfully!")}
-        Err(e) => {print_help(&format!("ERROR: error while reading specified file {}", e))}
+        Ok(_) => {
+            println!("Opened file successfully!")
+        }
+        Err(e) => print_help(&format!("ERROR: error while reading specified file {}", e)),
     }
     let mut devices: Vec<Box<dyn Device>> = vec![];
     match args.get(3) {
@@ -20,9 +22,7 @@ pub fn main(args: Vec<String>, mut file: File) {
         }
         Some(mode) => {
             if mode == "--disable-devices" {
-
-            }
-            else {
+            } else {
                 add_default_devices(&mut devices);
             }
         }
@@ -36,7 +36,10 @@ pub fn main(args: Vec<String>, mut file: File) {
 }
 
 fn print_debug(state: CpuState) {
-    println!("Registers: \nA: {} B: {} X: {} S: {} \nUpcoming Instruction: {:?}", state.a, state.b, state.x, state.s, state.upcoming);
+    println!(
+        "Registers: \nA: {} B: {} X: {} S: {} \nUpcoming Instruction: {:?}",
+        state.a, state.b, state.x, state.s, state.upcoming
+    );
 }
 
 fn pause() {
