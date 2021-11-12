@@ -3,8 +3,8 @@ use std::convert::TryInto;
 use errors::CpuError;
 use instructions::Instruction;
 
-mod instructions;
 mod errors;
+mod instructions;
 
 pub fn get_version() -> &'static str {
     env!("CARGO_PKG_VERSION")
