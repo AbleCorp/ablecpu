@@ -1,8 +1,10 @@
 use std::convert::TryInto;
 
+use errors::CpuError;
 use instructions::Instruction;
 
 mod instructions;
+mod errors;
 
 pub fn get_version() -> &'static str {
     env!("CARGO_PKG_VERSION")
@@ -65,7 +67,13 @@ impl Cpu {
 
     pub fn tick(&self) {}
 
-    fn get_instruction(&self, index: u64) -> Instruction {}
+    fn get_instruction(&self, index: u64) -> Result<Instruction, CpuError> {
+        Instruction::from_tuple((
+            self.instruction_cache.get(index) as u8,
+            self.instruction_cache.get(index + 1),
+            self.instruction_cache.get(index + 2),
+        ))
+    }
 }
 
 mod tests {
