@@ -1,4 +1,5 @@
 pub enum CpuError {
-    IllegalInstruction(u8),
-    IllegalInstructionSpeed(u8),
+    IllegalInstruction(u64),
+    IllegalInstructionSpeed(u64),
+    DeviceError(u64),
 }

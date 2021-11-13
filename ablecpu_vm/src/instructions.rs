@@ -27,7 +27,7 @@ impl InstructionSpeed {
             1 => Ok(InstructionSpeed::Medium),
             2 => Ok(InstructionSpeed::Slow),
             3 => Ok(InstructionSpeed::Halt),
-            _ => Err(CpuError::IllegalInstructionSpeed(raw)),
+            _ => Err(CpuError::IllegalInstructionSpeed(raw as u64)),
         }
     }
 }
@@ -118,7 +118,7 @@ impl Instruction {
                 do_debug_info,
                 InstructionSpeed::from_u8(tuple.0)?,
             )),
-            _ => Err(CpuError::IllegalInstruction(tuple.0)),
+            _ => Err(CpuError::IllegalInstruction(tuple.0 as u64)),
         }
     }
 }

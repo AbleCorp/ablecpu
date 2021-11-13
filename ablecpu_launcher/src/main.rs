@@ -1,7 +1,6 @@
 use std::env;
 use std::fs::File;
 
-mod debug;
 mod devices;
 mod run;
 
@@ -13,7 +12,6 @@ fn main() {
             let file = find_file(&args);
             match command.as_str() {
                 "run" => run::main(args, file),
-                "debug" => debug::main(args, file),
                 _ => print_help(""),
             }
         }

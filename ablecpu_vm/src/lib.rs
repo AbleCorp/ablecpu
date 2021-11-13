@@ -3,7 +3,7 @@ use std::convert::TryInto;
 use errors::CpuError;
 use instructions::Instruction;
 
-mod errors;
+pub mod errors;
 mod instructions;
 
 pub fn get_version() -> &'static str {
@@ -65,7 +65,9 @@ impl Cpu {
         }
     }
 
-    pub fn tick(&self) {}
+    pub fn tick(&self) -> Result<(), CpuError>{
+        Ok(())
+    }
 
     fn get_instruction(&self, index: u64) -> Result<Instruction, CpuError> {
         Instruction::from_tuple((
@@ -88,4 +90,10 @@ mod tests {
     }
 }
 
-pub trait Device {}
+pub trait Device {
+    fn get_address_space(&self) -> (u64, u64);
+
+    fn load(&self, address: u64) -> Result<u64, CpuError>;
+
+    fn push(&self, address: u64, value: u64) -> Result<(), CpuError>;
+}
