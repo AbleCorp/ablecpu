@@ -1,4 +1,4 @@
-use ablecpu_vm::{Device, errors::CpuError};
+use ablecpu_vm::{errors::CpuError, Device};
 
 pub(crate) struct TerminalOut {}
 
@@ -15,10 +15,13 @@ impl Device for TerminalOut {
     }
 
     fn push(&self, address: u64, value: u64) -> Result<(), CpuError> {
-        print!("{}", match std::str::from_utf8(&value.to_be_bytes()) {
-            Ok(s) => s,
-            Err(_) => return Err(CpuError::DeviceError(value))
-        });
+        print!(
+            "{}",
+            match std::str::from_utf8(&value.to_be_bytes()) {
+                Ok(s) => s,
+                Err(_) => return Err(CpuError::DeviceError(value)),
+            }
+        );
         Ok(())
     }
 }

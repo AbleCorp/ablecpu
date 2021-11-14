@@ -1,4 +1,4 @@
-use std::convert::TryInto;
+use std::{convert::TryInto, slice::range};
 
 use errors::CpuError;
 use instructions::Instruction;
@@ -65,7 +65,20 @@ impl Cpu {
         }
     }
 
-    pub fn tick(&self) -> Result<(), CpuError>{
+    pub fn tick(&mut self) -> Result<(), CpuError> {
+        let instruction = self.get_instruction(self.reg_zero)?;
+
+        match instruction {
+            Instruction::Load(arg1, arg2, ignore_erros, no_halt_if_error, no_debug_info, _) => {}
+            Instruction::Copy(_, _, _, _, _, _) => todo!(),
+            Instruction::Swap(_, _, _, _, _, _) => todo!(),
+            Instruction::Comp(_, _, _, _, _, _) => todo!(),
+            Instruction::Add(_, _, _, _, _, _) => todo!(),
+            Instruction::Sub(_, _, _, _, _, _) => todo!(),
+            Instruction::Mul(_, _, _, _, _, _) => todo!(),
+            Instruction::Div(_, _, _, _, _, _) => todo!(),
+        }
+        self.reg_zero += 17;
         Ok(())
     }
 
@@ -75,6 +88,43 @@ impl Cpu {
             self.instruction_cache.get(index + 1),
             self.instruction_cache.get(index + 2),
         ))
+    }
+
+    fn load(&self, arg: u64) -> Result<u64, CpuError> {
+        match arg {
+            0 => Ok(self.reg_zero),
+            1..=65535 => Ok(self.data_cache[(arg - 1) as usize]),
+            65536..=131071 => Ok(self.instruction_cache.get(arg - 65536)),
+            address => {
+                for device in self.devices {
+                    return device.load(address);
+                }
+                Err(CpuError::AddressNotPopulated(address))
+            }
+        }
+    }
+
+    fn push(&mut self, arg1: u64, arg2: u64) -> Result<(), CpuError> {
+        match arg1 {
+            0 => {
+                self.reg_zero = arg2;
+                Ok(())
+            }
+            1..=65535 => {
+                self.data_cache[(arg1 - 1) as usize] = arg2;
+                Ok(())
+            }
+            65536..=131071 => {
+                self.instruction_cache.set(arg1 - 65536, arg2);
+                Ok(())
+            }
+            address => {
+                for device in self.devices {
+                    return device.push(address, arg2);
+                }
+                Err(CpuError::AddressNotPopulated(address))
+            }
+        }
     }
 }
 

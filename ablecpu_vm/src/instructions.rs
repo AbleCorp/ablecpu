@@ -13,7 +13,7 @@ pub enum Instruction {
 }
 
 #[derive(Debug)]
-enum InstructionSpeed {
+pub enum InstructionSpeed {
     Fast,
     Medium,
     Slow,
@@ -35,19 +35,19 @@ impl InstructionSpeed {
 impl Instruction {
     pub fn from_tuple(tuple: (u8, u64, u64)) -> Result<Instruction, CpuError> {
         let instruction_type = tuple.0 & 0b11100000;
-        let do_error_handling = if tuple.0 & 0b00010000 == 0b00010000 {
+        let ignore_errors = if tuple.0 & 0b00010000 == 0b00010000 {
             true
         } else {
             false
         };
 
-        let halt_if_error = if tuple.0 & 0b00001000 == 0b00001000 {
+        let no_halt_if_error = if tuple.0 & 0b00001000 == 0b00001000 {
             true
         } else {
             false
         };
 
-        let do_debug_info = if tuple.0 & 0b00000100 == 0b00000100 {
+        let no_debug_info = if tuple.0 & 0b00000100 == 0b00000100 {
             true
         } else {
             false
@@ -57,65 +57,65 @@ impl Instruction {
             0b00000000 => Ok(Instruction::Load(
                 tuple.1,
                 tuple.2,
-                do_error_handling,
-                halt_if_error,
-                do_debug_info,
+                ignore_errors,
+                no_halt_if_error,
+                no_debug_info,
                 InstructionSpeed::from_u8(tuple.0)?,
             )),
             0b00100000 => Ok(Instruction::Copy(
                 tuple.1,
                 tuple.2,
-                do_error_handling,
-                halt_if_error,
-                do_debug_info,
+                ignore_errors,
+                no_halt_if_error,
+                no_debug_info,
                 InstructionSpeed::from_u8(tuple.0)?,
             )),
             0b01000000 => Ok(Instruction::Swap(
                 tuple.1,
                 tuple.2,
-                do_error_handling,
-                halt_if_error,
-                do_debug_info,
+                ignore_errors,
+                no_halt_if_error,
+                no_debug_info,
                 InstructionSpeed::from_u8(tuple.0)?,
             )),
             0b01100000 => Ok(Instruction::Comp(
                 tuple.1,
                 tuple.2,
-                do_error_handling,
-                halt_if_error,
-                do_debug_info,
+                ignore_errors,
+                no_halt_if_error,
+                no_debug_info,
                 InstructionSpeed::from_u8(tuple.0)?,
             )),
             0b10000000 => Ok(Instruction::Add(
                 tuple.1,
                 tuple.2,
-                do_error_handling,
-                halt_if_error,
-                do_debug_info,
+                ignore_errors,
+                no_halt_if_error,
+                no_debug_info,
                 InstructionSpeed::from_u8(tuple.0)?,
             )),
             0b10100000 => Ok(Instruction::Sub(
                 tuple.1,
                 tuple.2,
-                do_error_handling,
-                halt_if_error,
-                do_debug_info,
+                ignore_errors,
+                no_halt_if_error,
+                no_debug_info,
                 InstructionSpeed::from_u8(tuple.0)?,
             )),
             0b11000000 => Ok(Instruction::Mul(
                 tuple.1,
                 tuple.2,
-                do_error_handling,
-                halt_if_error,
-                do_debug_info,
+                ignore_errors,
+                no_halt_if_error,
+                no_debug_info,
                 InstructionSpeed::from_u8(tuple.0)?,
             )),
             0b11100000 => Ok(Instruction::Div(
                 tuple.1,
                 tuple.2,
-                do_error_handling,
-                halt_if_error,
-                do_debug_info,
+                ignore_errors,
+                no_halt_if_error,
+                no_debug_info,
                 InstructionSpeed::from_u8(tuple.0)?,
             )),
             _ => Err(CpuError::IllegalInstruction(tuple.0 as u64)),
