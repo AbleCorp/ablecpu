@@ -1,4 +1,4 @@
-use std::{convert::TryInto, slice::range};
+use std::{convert::TryInto};
 
 use errors::CpuError;
 use instructions::Instruction;
@@ -96,7 +96,7 @@ impl Cpu {
             1..=65535 => Ok(self.data_cache[(arg - 1) as usize]),
             65536..=131071 => Ok(self.instruction_cache.get(arg - 65536)),
             address => {
-                for device in self.devices {
+                for device in &self.devices {
                     return device.load(address);
                 }
                 Err(CpuError::AddressNotPopulated(address))
@@ -119,7 +119,7 @@ impl Cpu {
                 Ok(())
             }
             address => {
-                for device in self.devices {
+                for device in &self.devices {
                     return device.push(address, arg2);
                 }
                 Err(CpuError::AddressNotPopulated(address))
