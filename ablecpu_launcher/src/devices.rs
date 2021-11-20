@@ -11,12 +11,12 @@ impl Device for TerminalOut {
         131073..=131073
     }
 
-    fn load(&self, address: u64) -> Result<u64, CpuError> {
-        println!();
+    fn load(&self, _address: u64) -> Result<u64, CpuError> {
+        println!("{}", _address);
         Ok(0)
     }
 
-    fn push(&self, address: u64, value: u64) -> Result<(), CpuError> {
+    fn push(&self, _address: u64, value: u64) -> Result<(), CpuError> {
         print!(
             "{}",
             match std::str::from_utf8(&value.to_be_bytes()) {
