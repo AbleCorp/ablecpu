@@ -1,4 +1,4 @@
-use std::{convert::TryInto};
+use std::{convert::TryInto, ops::RangeInclusive};
 
 use errors::CpuError;
 use instructions::Instruction;
@@ -96,10 +96,19 @@ impl Cpu {
             1..=65535 => Ok(self.data_cache[(arg - 1) as usize]),
             65536..=131071 => Ok(self.instruction_cache.get(arg - 65536)),
             address => {
-                for device in &self.devices {
-                    return device.load(address);
+                match self
+                    .devices
+                    .iter()
+                    .filter_map(|dev| match dev.get_address_space().contains(&address) {
+                        true => Some(dev),
+                        false => None,
+                    })
+                    .collect::<Vec<&Box<dyn Device>>>()
+                    .get(0)
+                {
+                    Some(dev) => return dev.load(address),
+                    None => return Err(CpuError::AddressNotPopulated(address)),
                 }
-                Err(CpuError::AddressNotPopulated(address))
             }
         }
     }
@@ -119,10 +128,19 @@ impl Cpu {
                 Ok(())
             }
             address => {
-                for device in &self.devices {
-                    return device.push(address, arg2);
+                match self
+                    .devices
+                    .iter()
+                    .filter_map(|dev| match dev.get_address_space().contains(&address) {
+                        true => Some(dev),
+                        false => None,
+                    })
+                    .collect::<Vec<&Box<dyn Device>>>()
+                    .get(0)
+                {
+                    Some(dev) => return dev.push(address, arg2),
+                    None => return Err(CpuError::AddressNotPopulated(address)),
                 }
-                Err(CpuError::AddressNotPopulated(address))
             }
         }
     }
@@ -141,7 +159,7 @@ mod tests {
 }
 
 pub trait Device {
-    fn get_address_space(&self) -> (u64, u64);
+    fn get_address_space(&self) -> RangeInclusive<u64>;
 
     fn load(&self, address: u64) -> Result<u64, CpuError>;
 

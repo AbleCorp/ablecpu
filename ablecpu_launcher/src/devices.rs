@@ -1,3 +1,5 @@
+use std::ops::RangeInclusive;
+
 use ablecpu_vm::{errors::CpuError, Device};
 
 pub(crate) struct TerminalOut {}
@@ -5,8 +7,8 @@ pub(crate) struct TerminalOut {}
 pub(crate) struct TerminalIn {}
 
 impl Device for TerminalOut {
-    fn get_address_space(&self) -> (u64, u64) {
-        (131073, 131073)
+    fn get_address_space(&self) -> RangeInclusive<u64> {
+        131073..=131073
     }
 
     fn load(&self, address: u64) -> Result<u64, CpuError> {
@@ -27,7 +29,7 @@ impl Device for TerminalOut {
 }
 
 impl Device for TerminalIn {
-    fn get_address_space(&self) -> (u64, u64) {
+    fn get_address_space(&self) -> RangeInclusive<u64> {
         todo!()
     }
 
