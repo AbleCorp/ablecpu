@@ -50,8 +50,10 @@ jobs:
         with:
           toolchain: stable
           components: rustfmt
-      - name: Run Rustfmt
-        run: rustfmt
+      - name: Run rustfmt
+        uses: actions-rs/cargo@v1.0.1
+        with:
+          command: fmt
       - name: Commit cleaned code
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
