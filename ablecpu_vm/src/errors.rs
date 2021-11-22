@@ -1,3 +1,5 @@
+
+#[derive(Debug)]
 pub enum CpuError {
     IllegalState(u64),
     IllegalInstruction(u64),

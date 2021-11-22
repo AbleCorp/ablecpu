@@ -2,9 +2,9 @@ use crate::errors::CpuError;
 
 #[derive(Debug)]
 pub enum Instruction {
+    NoOp(u64, u64, bool, bool, bool, InstructionSpeed),
     Load(u64, u64, bool, bool, bool, InstructionSpeed),
     Copy(u64, u64, bool, bool, bool, InstructionSpeed),
-    Swap(u64, u64, bool, bool, bool, InstructionSpeed),
     Comp(u64, u64, bool, bool, bool, InstructionSpeed),
     Add(u64, u64, bool, bool, bool, InstructionSpeed),
     Sub(u64, u64, bool, bool, bool, InstructionSpeed),
@@ -54,7 +54,7 @@ impl Instruction {
         };
 
         match instruction_type {
-            0b00000000 => Ok(Instruction::Load(
+            0b00000000 => Ok(Instruction::NoOp(
                 tuple.1,
                 tuple.2,
                 ignore_errors,
@@ -62,7 +62,7 @@ impl Instruction {
                 no_debug_info,
                 InstructionSpeed::from_u8(tuple.0)?,
             )),
-            0b00100000 => Ok(Instruction::Copy(
+            0b00100000 => Ok(Instruction::Load(
                 tuple.1,
                 tuple.2,
                 ignore_errors,
@@ -70,7 +70,7 @@ impl Instruction {
                 no_debug_info,
                 InstructionSpeed::from_u8(tuple.0)?,
             )),
-            0b01000000 => Ok(Instruction::Swap(
+            0b01000000 => Ok(Instruction::Copy(
                 tuple.1,
                 tuple.2,
                 ignore_errors,

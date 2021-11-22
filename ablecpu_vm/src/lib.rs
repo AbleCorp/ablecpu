@@ -69,14 +69,181 @@ impl Cpu {
         let instruction = self.get_instruction(self.reg_zero)?;
 
         match instruction {
-            Instruction::Load(arg1, arg2, ignore_erros, no_halt_if_error, no_debug_info, _) => {}
-            Instruction::Copy(_, _, _, _, _, _) => todo!(),
-            Instruction::Swap(_, _, _, _, _, _) => todo!(),
-            Instruction::Comp(_, _, _, _, _, _) => todo!(),
-            Instruction::Add(_, _, _, _, _, _) => todo!(),
-            Instruction::Sub(_, _, _, _, _, _) => todo!(),
-            Instruction::Mul(_, _, _, _, _, _) => todo!(),
-            Instruction::Div(_, _, _, _, _, _) => todo!(),
+            Instruction::NoOp(_, _, _, _, _, _) => {}
+            Instruction::Load(arg1, arg2, ignore_errors, no_halt_if_error, no_debug_info, _) => {
+                match self.push(arg1, arg2) {
+                    Ok(_) => {},
+                    Err(e) => {
+                        self.handle_error(e, ignore_errors, no_halt_if_error, no_debug_info)?;
+                    },
+                }
+            }
+            Instruction::Copy(arg1, arg2, ignore_errors, no_halt_if_error, no_debug_info, _) => {
+                let mut value: u64 = 0;
+
+                match self.load(arg1) {
+                    Ok(v) => {
+                        value = v;
+                    },
+                    Err(e) => {
+                        self.handle_error(e, ignore_errors, no_halt_if_error, no_debug_info)?;
+                    },
+                }
+                match self.push(arg1, value) {
+                    Ok(_) => {},
+                    Err(e) => {
+                        self.handle_error(e, ignore_errors, no_halt_if_error, no_debug_info)?;
+                    },
+                }
+            }
+            Instruction::Comp(arg1, arg2, ignore_errors, no_halt_if_error, no_debug_info, _) => {
+                let mut value1: u64 = 0;
+                let mut value2: u64 = 0;
+
+                match self.load(arg1) {
+                    Ok(v) => {
+                        value1 = v;
+                    },
+                    Err(e) => {
+                        self.handle_error(e, ignore_errors, no_halt_if_error, no_debug_info)?;
+                    },
+                }
+
+                match self.load(arg2) {
+                    Ok(v) => {
+                        value2 = v;
+                    },
+                    Err(e) => {
+                        self.handle_error(e, ignore_errors, no_halt_if_error, no_debug_info)?;
+                    },
+                }
+
+                match value1.cmp(&value2) {
+                    std::cmp::Ordering::Less => {},
+                    std::cmp::Ordering::Equal => {
+                        self.reg_zero += 1;
+                    },
+                    std::cmp::Ordering::Greater => {
+                        self.reg_zero += 2;
+                    },
+                }
+            }
+            Instruction::Add(arg1, arg2, ignore_errors, no_halt_if_error, no_debug_info, _) => {
+                let mut value1: u64 = 0;
+                let mut value2: u64 = 0;
+
+                match self.load(arg1) {
+                    Ok(v) => {
+                        value1 = v;
+                    },
+                    Err(e) => {
+                        self.handle_error(e, ignore_errors, no_halt_if_error, no_debug_info)?;
+                    },
+                }
+
+                match self.load(arg2) {
+                    Ok(v) => {
+                        value2 = v;
+                    },
+                    Err(e) => {
+                        self.handle_error(e, ignore_errors, no_halt_if_error, no_debug_info)?;
+                    },
+                }
+
+                match self.push(arg1, value1 + value2) {
+                    Ok(_) => {},
+                    Err(e) => {
+                        self.handle_error(e, ignore_errors, no_halt_if_error, no_debug_info)?;
+                    },
+                }
+            },
+            Instruction::Sub(arg1, arg2, ignore_errors, no_halt_if_error, no_debug_info, _) => {
+                let mut value1: u64 = 0;
+                let mut value2: u64 = 0;
+
+                match self.load(arg1) {
+                    Ok(v) => {
+                        value1 = v;
+                    },
+                    Err(e) => {
+                        self.handle_error(e, ignore_errors, no_halt_if_error, no_debug_info)?;
+                    },
+                }
+
+                match self.load(arg2) {
+                    Ok(v) => {
+                        value2 = v;
+                    },
+                    Err(e) => {
+                        self.handle_error(e, ignore_errors, no_halt_if_error, no_debug_info)?;
+                    },
+                }
+
+                match self.push(arg1, value1 - value2) {
+                    Ok(_) => {},
+                    Err(e) => {
+                        self.handle_error(e, ignore_errors, no_halt_if_error, no_debug_info)?;
+                    },
+                }
+            },
+            Instruction::Mul(arg1, arg2, ignore_errors, no_halt_if_error, no_debug_info, _) => {
+                let mut value1: u64 = 0;
+                let mut value2: u64 = 0;
+
+                match self.load(arg1) {
+                    Ok(v) => {
+                        value1 = v;
+                    },
+                    Err(e) => {
+                        self.handle_error(e, ignore_errors, no_halt_if_error, no_debug_info)?;
+                    },
+                }
+
+                match self.load(arg2) {
+                    Ok(v) => {
+                        value2 = v;
+                    },
+                    Err(e) => {
+                        self.handle_error(e, ignore_errors, no_halt_if_error, no_debug_info)?;
+                    },
+                }
+
+                match self.push(arg1, value1 * value2) {
+                    Ok(_) => {},
+                    Err(e) => {
+                        self.handle_error(e, ignore_errors, no_halt_if_error, no_debug_info)?;
+                    },
+                }
+            },
+            Instruction::Div(arg1, arg2, ignore_errors, no_halt_if_error, no_debug_info, _) => {
+                let mut value1: u64 = 0;
+                let mut value2: u64 = 0;
+
+                match self.load(arg1) {
+                    Ok(v) => {
+                        value1 = v;
+                    },
+                    Err(e) => {
+                        self.handle_error(e, ignore_errors, no_halt_if_error, no_debug_info)?;
+                    },
+                }
+
+                match self.load(arg2) {
+                    Ok(v) => {
+                        value2 = v;
+                    },
+                    Err(e) => {
+                        self.handle_error(e, ignore_errors, no_halt_if_error, no_debug_info)?;
+                    },
+                }
+
+                match self.push(arg1, value1 / value2) {
+                    Ok(_) => {},
+                    Err(e) => {
+                        self.handle_error(e, ignore_errors, no_halt_if_error, no_debug_info)?;
+                    },
+                }
+            },
         }
         self.reg_zero += 17;
         Ok(())
@@ -143,6 +310,20 @@ impl Cpu {
                 }
             }
         }
+    }
+
+    fn handle_error(&mut self,  e: CpuError, ignore_errors: bool, no_halt_if_error: bool, no_debug_info: bool) -> Result<(), CpuError> {
+        if !ignore_errors {
+            if !no_halt_if_error {
+                return Err(e);
+            } else {
+                if !no_debug_info {
+                    self.push(420, self.reg_zero)?;
+                    
+                }
+            }
+        }
+        Ok(())
     }
 }
 
