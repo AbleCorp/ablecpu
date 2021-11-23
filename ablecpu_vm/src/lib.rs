@@ -272,7 +272,8 @@ impl Cpu {
                     })
                     .collect::<Vec<&Box<dyn Device>>>()
                     .get(0)
-                {Some(dev) => return dev.load(address),
+                {
+                    Some(dev) => return dev.load(address),
                     None => return Err(CpuError::AddressNotPopulated(address)),
                 }
             }
