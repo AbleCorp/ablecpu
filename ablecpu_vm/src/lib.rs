@@ -89,7 +89,7 @@ impl Cpu {
                         self.handle_error(e, ignore_errors, no_halt_if_error, no_debug_info)?;
                     }
                 }
-                match self.push(arg1, value) {
+                match self.push(arg2, value) {
                     Ok(_) => {}
                     Err(e) => {
                         self.handle_error(e, ignore_errors, no_halt_if_error, no_debug_info)?;
