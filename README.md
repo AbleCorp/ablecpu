@@ -4,3 +4,7 @@
 This is a repo containing both the library and the launcher for the ableCPU emulator (vm)
 
 AbleCPU is a project only done for learning purposes and should probably not be used productively.
+
+## License
+
+While the code is licensed under the MIT license, the instruction set defition is All Rights Reserved.
