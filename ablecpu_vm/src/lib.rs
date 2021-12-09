@@ -3,9 +3,9 @@ use std::{convert::TryInto, ops::RangeInclusive};
 use errors::Cpu64Error;
 use instructions::Instruction;
 
+mod archs;
 pub mod errors;
 mod instructions;
-mod archs;
 
 pub fn get_version() -> &'static str {
     env!("CARGO_PKG_VERSION")
