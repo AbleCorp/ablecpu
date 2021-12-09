@@ -1,6 +1,6 @@
 use std::ops::RangeInclusive;
 
-use ablecpu_vm::{errors::CpuError, Device};
+use ablecpu_vm::{errors::Cpu64Error, Device};
 
 pub(crate) struct TerminalOut {}
 
@@ -11,17 +11,17 @@ impl Device for TerminalOut {
         131073..=131073
     }
 
-    fn load(&self, _address: u64) -> Result<u64, CpuError> {
+    fn load(&self, _address: u64) -> Result<u64, Cpu64Error> {
         println!("{}", _address);
         Ok(0)
     }
 
-    fn push(&self, _address: u64, value: u64) -> Result<(), CpuError> {
+    fn push(&self, _address: u64, value: u64) -> Result<(), Cpu64Error> {
         print!(
             "{}",
             match std::str::from_utf8(&value.to_be_bytes()) {
                 Ok(s) => s,
-                Err(_) => return Err(CpuError::DeviceError(value)),
+                Err(_) => return Err(Cpu64Error::DeviceError(value)),
             }
         );
         Ok(())
@@ -33,11 +33,11 @@ impl Device for TerminalIn {
         todo!()
     }
 
-    fn load(&self, address: u64) -> Result<u64, CpuError> {
+    fn load(&self, address: u64) -> Result<u64, Cpu64Error> {
         todo!()
     }
 
-    fn push(&self, address: u64, value: u64) -> Result<(), CpuError> {
+    fn push(&self, address: u64, value: u64) -> Result<(), Cpu64Error> {
         todo!()
     }
 }

@@ -1,5 +1,5 @@
 #[derive(Debug)]
-pub enum CpuError {
+pub enum Cpu64Error {
     IllegalState(u64),
     IllegalInstruction(u64),
     IllegalInstructionSpeed(u64),
