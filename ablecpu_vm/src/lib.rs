@@ -3,9 +3,9 @@ use std::{convert::TryInto, ops::RangeInclusive};
 use errors::Cpu64Error;
 use instructions::Instruction;
 
+mod archs;
 pub mod errors;
 mod instructions;
-mod archs;
 
 pub fn get_version() -> &'static str {
     env!("CARGO_PKG_VERSION")
@@ -330,18 +330,6 @@ impl Cpu64 {
             }
         }
         Ok(())
-    }
-}
-
-mod tests {
-    #[test]
-    fn it_works() {
-        let mut cstm_vec: Vec<u8> = vec![1, 0, 0, 0, 0, 0, 0, 0, 8];
-        let mut fill_vec: Vec<u8> = vec![0; 371356];
-        cstm_vec.append(&mut fill_vec);
-
-        let test_Cpu64 = super::Cpu64::new(cstm_vec.into_boxed_slice());
-        println!("{:?}", test_Cpu64.instruction_cache.instructions[0]);
     }
 }
 
