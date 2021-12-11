@@ -8,5 +8,3 @@ AbleCPU is a project only done for learning purposes and should probably not be 
 ## License
 
 While the code is licensed under the MIT license, the instruction set defition is All Rights Reserved.
-
-aaaa
