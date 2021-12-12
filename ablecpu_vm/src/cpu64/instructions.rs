@@ -32,7 +32,7 @@ impl InstructionSpeed {
     }
 }
 
-impl Instruction {
+impl Instruction64 {
     pub fn from_tuple(tuple: (u8, u64, u64)) -> Result<Instruction, Cpu64Error> {
         let instruction_type = tuple.0 & 0b11100000;
         let ignore_errors = if tuple.0 & 0b00010000 == 0b00010000 {
