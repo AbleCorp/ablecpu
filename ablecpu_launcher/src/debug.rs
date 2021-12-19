@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io;
 use std::io::Read;
 
-use ableCpu64_vm::{Cpu64, Cpu64State, Device};
+use ablecpu_vm::{Cpu, CpuState, Device};
 
 use crate::devices::{TerminalIn, TerminalOut};
 use crate::print_help;
@@ -27,15 +27,15 @@ pub fn main(args: Vec<String>, mut file: File) {
             }
         }
     }
-    let mut Cpu64 = Cpu64::new(bin, devices);
+    let mut cpu = Cpu::new(bin, devices);
     loop {
-        print_debug(Cpu64.debug());
-        Cpu64.tick().unwrap();
+        print_debug(cpu.debug());
+        cpu.tick().unwrap();
         pause();
     }
 }
 
-fn print_debug(state: Cpu64State) {
+fn print_debug(state: CpuState) {
     println!(
         "Registers: \nA: {} B: {} X: {} S: {} \nUpcoming Instruction: {:?}",
         state.a, state.b, state.x, state.s, state.upcoming

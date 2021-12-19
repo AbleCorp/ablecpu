@@ -1,4 +1,4 @@
-use crate::errors::Cpu64Error;
+use crate::errors::CpuError;
 
 #[derive(Debug)]
 pub enum Instruction {
@@ -21,19 +21,19 @@ pub enum InstructionSpeed {
 }
 
 impl InstructionSpeed {
-    fn from_u8(raw: u8) -> Result<InstructionSpeed, Cpu64Error> {
+    fn from_u8(raw: u8) -> Result<InstructionSpeed, CpuError> {
         match raw & 0b0000_0011 {
             0 => Ok(InstructionSpeed::Fast),
             1 => Ok(InstructionSpeed::Medium),
             2 => Ok(InstructionSpeed::Slow),
             3 => Ok(InstructionSpeed::Halt),
-            _ => Err(Cpu64Error::IllegalInstructionSpeed(raw as u64)),
+            _ => Err(CpuError::IllegalInstructionSpeed(raw as u64)),
         }
     }
 }
 
 impl Instruction {
-    pub fn from_tuple(tuple: (u8, u64, u64)) -> Result<Instruction, Cpu64Error> {
+    pub fn from_tuple(tuple: (u8, u64, u64)) -> Result<Instruction, CpuError> {
         let instruction_type = tuple.0 & 0b11100000;
         let ignore_errors = if tuple.0 & 0b00010000 == 0b00010000 {
             true
@@ -118,7 +118,7 @@ impl Instruction {
                 no_debug_info,
                 InstructionSpeed::from_u8(tuple.0)?,
             )),
-            _ => Err(Cpu64Error::IllegalInstruction(tuple.0 as u64)),
+            _ => Err(CpuError::IllegalInstruction(tuple.0 as u64)),
         }
     }
 }

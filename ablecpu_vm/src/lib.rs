@@ -1,11 +1,10 @@
 use std::{convert::TryInto, ops::RangeInclusive};
 
-use errors::Cpu64Error;
+use errors::CpuError;
 use instructions::Instruction;
 
 pub mod errors;
 mod instructions;
-mod archs;
 
 pub fn get_version() -> &'static str {
     env!("CARGO_PKG_VERSION")
@@ -49,16 +48,16 @@ impl InstructionCache {
     }
 }
 
-pub struct Cpu64 {
+pub struct Cpu {
     reg_zero: u64,
     data_cache: [u64; 65535],
     pub instruction_cache: InstructionCache,
     devices: Vec<Box<dyn Device>>,
 }
 
-impl Cpu64 {
-    pub fn new(instructions: Box<[u8]>) -> Cpu64 {
-        Cpu64 {
+impl Cpu {
+    pub fn new(instructions: Box<[u8]>) -> Cpu {
+        Cpu {
             reg_zero: 65536,
             data_cache: [0; 65535],
             instruction_cache: InstructionCache::new(instructions),
@@ -66,7 +65,7 @@ impl Cpu64 {
         }
     }
 
-    pub fn tick(&mut self) -> Result<(), Cpu64Error> {
+    pub fn tick(&mut self) -> Result<(), CpuError> {
         let instruction = self.get_instruction(self.reg_zero)?;
 
         match instruction {
@@ -250,7 +249,7 @@ impl Cpu64 {
         Ok(())
     }
 
-    fn get_instruction(&self, index: u64) -> Result<Instruction, Cpu64Error> {
+    fn get_instruction(&self, index: u64) -> Result<Instruction, CpuError> {
         Instruction::from_tuple((
             self.instruction_cache.get(index) as u8,
             self.instruction_cache.get(index + 1),
@@ -258,7 +257,7 @@ impl Cpu64 {
         ))
     }
 
-    fn load(&self, arg: u64) -> Result<u64, Cpu64Error> {
+    fn load(&self, arg: u64) -> Result<u64, CpuError> {
         match arg {
             0 => Ok(self.reg_zero),
             1..=65535 => Ok(self.data_cache[(arg - 1) as usize]),
@@ -275,13 +274,13 @@ impl Cpu64 {
                     .get(0)
                 {
                     Some(dev) => return dev.load(address),
-                    None => return Err(Cpu64Error::AddressNotPopulated(address)),
+                    None => return Err(CpuError::AddressNotPopulated(address)),
                 }
             }
         }
     }
 
-    fn push(&mut self, arg1: u64, arg2: u64) -> Result<(), Cpu64Error> {
+    fn push(&mut self, arg1: u64, arg2: u64) -> Result<(), CpuError> {
         match arg1 {
             0 => {
                 self.reg_zero = arg2;
@@ -307,7 +306,7 @@ impl Cpu64 {
                     .get(0)
                 {
                     Some(dev) => return dev.push(address, arg2),
-                    None => return Err(Cpu64Error::AddressNotPopulated(address)),
+                    None => return Err(CpuError::AddressNotPopulated(address)),
                 }
             }
         }
@@ -315,11 +314,11 @@ impl Cpu64 {
 
     fn handle_error(
         &mut self,
-        e: Cpu64Error,
+        e: CpuError,
         ignore_errors: bool,
         no_halt_if_error: bool,
         no_debug_info: bool,
-    ) -> Result<(), Cpu64Error> {
+    ) -> Result<(), CpuError> {
         if !ignore_errors {
             if !no_halt_if_error {
                 return Err(e);
@@ -340,15 +339,15 @@ mod tests {
         let mut fill_vec: Vec<u8> = vec![0; 371356];
         cstm_vec.append(&mut fill_vec);
 
-        let test_Cpu64 = super::Cpu64::new(cstm_vec.into_boxed_slice());
-        println!("{:?}", test_Cpu64.instruction_cache.instructions[0]);
+        let test_cpu = super::Cpu::new(cstm_vec.into_boxed_slice());
+        println!("{:?}", test_cpu.instruction_cache.instructions[0]);
     }
 }
 
 pub trait Device {
     fn get_address_space(&self) -> RangeInclusive<u64>;
 
-    fn load(&self, address: u64) -> Result<u64, Cpu64Error>;
+    fn load(&self, address: u64) -> Result<u64, CpuError>;
 
-    fn push(&self, address: u64, value: u64) -> Result<(), Cpu64Error>;
+    fn push(&self, address: u64, value: u64) -> Result<(), CpuError>;
 }
