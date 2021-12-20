@@ -1,33 +1,37 @@
 use std::{convert::TryInto, ops::RangeInclusive};
 
+
+use arch::Arch;
 use errors::CpuError;
 use instructions::Instruction;
+use num::Num;
 
 pub mod errors;
 mod instructions;
+mod arch;
 
 pub fn get_version() -> &'static str {
     env!("CARGO_PKG_VERSION")
 }
 
-pub struct InstructionCache {
-    instructions: Box<[(u8, u64, u64)]>,
+pub struct InstructionCache<T: Arch + Num> {
+    instructions: Box<[(u8, T, T)]>,
 }
 
-impl InstructionCache {
-    fn new(raw: Box<[u8]>) -> InstructionCache {
+impl<T: Arch + Num> InstructionCache<T> {
+    fn new(raw: Box<[u8]>) -> InstructionCache<T> {
         let mut i: usize = 0;
-        let mut assembled: Box<[(u8, u64, u64)]> = vec![(0, 0, 0); 21845].into_boxed_slice();
+        let mut assembled: Box<[(u8, T, T)]> = vec![(0, 0, 0); 21845].into_boxed_slice();
         while i < 371365 {
             let inst = raw[i];
-            let arg_one = u64::from_be_bytes(raw[i + 1..=i + 8].try_into().unwrap());
+            let arg_one = T::from_be_bytes(raw[i + 1..=i + 8].try_into().unwrap());
             let arg_two = u64::from_be_bytes(raw[i + 9..=i + 16].try_into().unwrap());
             assembled[i / 17] = (inst, arg_one, arg_two);
             i += 17;
         }
 
         InstructionCache {
-            instructions: assembled,
+            instructions: assembled
         }
     }
 
@@ -48,15 +52,15 @@ impl InstructionCache {
     }
 }
 
-pub struct Cpu {
-    reg_zero: u64,
-    data_cache: [u64; 65535],
-    pub instruction_cache: InstructionCache,
+pub struct Cpu<T: Arch + Num> {
+    reg_zero: T,
+    data_cache: [T; 65535],
+    pub instruction_cache: InstructionCache<T>,
     devices: Vec<Box<dyn Device>>,
 }
 
-impl Cpu {
-    pub fn new(instructions: Box<[u8]>) -> Cpu {
+impl<T: Arch + Num> Cpu<T> {
+    pub fn new(instructions: Box<[u8]>) -> Cpu<T> {
         Cpu {
             reg_zero: 65536,
             data_cache: [0; 65535],
@@ -79,7 +83,7 @@ impl Cpu {
                 }
             }
             Instruction::Copy(arg1, arg2, ignore_errors, no_halt_if_error, no_debug_info, _) => {
-                let mut value: u64 = 0;
+                let mut value: T = 0;
 
                 match self.load(arg1) {
                     Ok(v) => {
@@ -257,7 +261,7 @@ impl Cpu {
         ))
     }
 
-    fn load(&self, arg: u64) -> Result<u64, CpuError> {
+    fn load(&self, arg: T) -> Result<T, CpuError> {
         match arg {
             0 => Ok(self.reg_zero),
             1..=65535 => Ok(self.data_cache[(arg - 1) as usize]),
@@ -333,13 +337,15 @@ impl Cpu {
 }
 
 mod tests {
+    use crate::Cpu;
+
     #[test]
     fn it_works() {
         let mut cstm_vec: Vec<u8> = vec![1, 0, 0, 0, 0, 0, 0, 0, 8];
         let mut fill_vec: Vec<u8> = vec![0; 371356];
         cstm_vec.append(&mut fill_vec);
 
-        let test_cpu = super::Cpu::new(cstm_vec.into_boxed_slice());
+        let test_cpu: Cpu<u64> = super::Cpu::new(cstm_vec.into_boxed_slice());
         println!("{:?}", test_cpu.instruction_cache.instructions[0]);
     }
 }
