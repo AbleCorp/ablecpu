@@ -1,14 +1,13 @@
 use std::{convert::TryInto, ops::RangeInclusive};
 
-
 use arch::Arch;
 use errors::CpuError;
 use instructions::Instruction;
 use num::Num;
 
+mod arch;
 pub mod errors;
 mod instructions;
-mod arch;
 
 pub fn get_version() -> &'static str {
     env!("CARGO_PKG_VERSION")
@@ -31,7 +30,7 @@ impl<T: Arch + Num> InstructionCache<T> {
         }
 
         InstructionCache {
-            instructions: assembled
+            instructions: assembled,
         }
     }
 
