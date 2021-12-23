@@ -1,75 +1,74 @@
 use std::{convert::TryInto, ops::RangeInclusive};
 
-
 use arch::Arch;
 use errors::CpuError;
 use instructions::Instruction;
-use num::Num;
 
+mod arch;
 pub mod errors;
 mod instructions;
-mod arch;
 
 pub fn get_version() -> &'static str {
     env!("CARGO_PKG_VERSION")
 }
 
-pub struct InstructionCache<T: Arch + Num> {
+pub struct InstructionCache<T: Arch> {
     instructions: Box<[(u8, T, T)]>,
 }
 
-impl<T: Arch + Num> InstructionCache<T> {
+impl<T: Arch + Clone> InstructionCache<T> {
     fn new(raw: Box<[u8]>) -> InstructionCache<T> {
         let mut i: usize = 0;
-        let mut assembled: Box<[(u8, T, T)]> = vec![(0, 0, 0); 21845].into_boxed_slice();
+        let mut assembled: Box<[(u8, T, T)]> =
+            vec![(0 as u8, 0.into(), 0.into()); 21845].into_boxed_slice();
         while i < 371365 {
             let inst = raw[i];
-            let arg_one = T::from_be_bytes(raw[i + 1..=i + 8].try_into().unwrap());
-            let arg_two = u64::from_be_bytes(raw[i + 9..=i + 16].try_into().unwrap());
+            let arg_one = T::from_be_bytes(&raw[i + 1..=i + 8]);
+            let arg_two = T::from_be_bytes(&raw[i + 9..=i + 16]);
             assembled[i / 17] = (inst, arg_one, arg_two);
             i += 17;
         }
 
         InstructionCache {
-            instructions: assembled
+            instructions: assembled,
         }
     }
 
-    pub fn get(&self, index: u64) -> u64 {
-        match index % 3 {
-            0 => self.instructions[(index / 3) as usize].0 as u64,
-            1 => self.instructions[(index / 3) as usize].1,
-            _ => self.instructions[(index / 3) as usize].2,
+    pub fn get(&self, index: T) -> T {
+        match (index % 3.into()).as_u8() {
+            0 => self.instructions[(index / 3.into()).as_usize()].0.into(),
+            1 => self.instructions[(index / 3.into()).as_usize()].1,
+            _ => self.instructions[(index / 3.into()).as_usize()].2,
         }
     }
 
-    pub fn set(&mut self, index: u64, value: u64) {
-        match index % 3 {
-            0 => self.instructions[(index / 3) as usize].0 = value as u8,
-            1 => self.instructions[(index / 3) as usize].1 = value,
-            _ => self.instructions[(index / 3) as usize].2 = value,
+    pub fn set(&mut self, index: T, value: T) {
+        match (index % 3.into()).as_u8() {
+            0 => self.instructions[(index / 3.into()).as_usize()].0 = value.as_u8(),
+            1 => self.instructions[(index / 3.into()).as_usize()].1 = value,
+            _ => self.instructions[(index / 3.into()).as_usize()].2 = value,
         }
     }
 }
 
-pub struct Cpu<T: Arch + Num> {
+pub struct Cpu<T: Arch> {
     reg_zero: T,
     data_cache: [T; 65535],
     pub instruction_cache: InstructionCache<T>,
-    devices: Vec<Box<dyn Device>>,
+    devices: Vec<Box<dyn Device<T>>>,
 }
 
-impl<T: Arch + Num> Cpu<T> {
+impl<T: Arch> Cpu<T> {
     pub fn new(instructions: Box<[u8]>) -> Cpu<T> {
         Cpu {
-            reg_zero: 65536,
-            data_cache: [0; 65535],
+            reg_zero: 65536.into(),
+            data_cache: [0.into(); 65535],
             instruction_cache: InstructionCache::new(instructions),
             devices: Vec::new(),
         }
     }
 
-    pub fn tick(&mut self) -> Result<(), CpuError> {
+    pub fn tick(&mut self) -> Result<(), CpuError<T>> {
         let instruction = self.get_instruction(self.reg_zero)?;
 
         match instruction {
@@ -83,7 +82,7 @@ impl<T: Arch + Num> Cpu<T> {
                 }
             }
             Instruction::Copy(arg1, arg2, ignore_errors, no_halt_if_error, no_debug_info, _) => {
-                let mut value: T = 0;
+                let mut value: T = 0.into();
 
                 match self.load(arg1) {
                     Ok(v) => {
@@ -101,8 +100,8 @@ impl<T: Arch + Num> Cpu<T> {
                 }
             }
             Instruction::Comp(arg1, arg2, ignore_errors, no_halt_if_error, no_debug_info, _) => {
-                let mut value1: u64 = 0;
-                let mut value2: u64 = 0;
+                let mut value1: T = 0.into();
+                let mut value2: T = 0.into();
 
                 match self.load(arg1) {
                     Ok(v) => {
@@ -125,16 +124,16 @@ impl<T: Arch + Num> Cpu<T> {
                 match value1.cmp(&value2) {
                     std::cmp::Ordering::Less => {}
                     std::cmp::Ordering::Equal => {
-                        self.reg_zero += 1;
+                        self.reg_zero += 1.into();
                     }
                     std::cmp::Ordering::Greater => {
-                        self.reg_zero += 2;
+                        self.reg_zero += 2.into();
                     }
                 }
             }
             Instruction::Add(arg1, arg2, ignore_errors, no_halt_if_error, no_debug_info, _) => {
-                let mut value1: u64 = 0;
-                let mut value2: u64 = 0;
+                let mut value1: T = 0.into();
+                let mut value2: T = 0.into();
 
                 match self.load(arg1) {
                     Ok(v) => {
@@ -162,8 +161,8 @@ impl<T: Arch + Num> Cpu<T> {
                 }
             }
             Instruction::Sub(arg1, arg2, ignore_errors, no_halt_if_error, no_debug_info, _) => {
-                let mut value1: u64 = 0;
-                let mut value2: u64 = 0;
+                let mut value1: T = 0.into();
+                let mut value2: T = 0.into();
 
                 match self.load(arg1) {
                     Ok(v) => {
@@ -191,8 +190,8 @@ impl<T: Arch + Num> Cpu<T> {
                 }
             }
             Instruction::Mul(arg1, arg2, ignore_errors, no_halt_if_error, no_debug_info, _) => {
-                let mut value1: u64 = 0;
-                let mut value2: u64 = 0;
+                let mut value1: T = 0.into();
+                let mut value2: T = 0.into();
 
                 match self.load(arg1) {
                     Ok(v) => {
@@ -220,8 +219,8 @@ impl<T: Arch + Num> Cpu<T> {
                 }
             }
             Instruction::Div(arg1, arg2, ignore_errors, no_halt_if_error, no_debug_info, _) => {
-                let mut value1: u64 = 0;
-                let mut value2: u64 = 0;
+                let mut value1: T = 0.into();
+                let mut value2: T = 0.into();
 
                 match self.load(arg1) {
                     Ok(v) => {
@@ -249,19 +248,20 @@ impl<T: Arch + Num> Cpu<T> {
                 }
             }
         }
-        self.reg_zero += 17;
+        self.reg_zero += 17.into();
         Ok(())
     }
 
-    fn get_instruction(&self, index: u64) -> Result<Instruction, CpuError> {
+    fn get_instruction(&self, index: T) -> Result<Instruction<T>, CpuError<T>> {
         Instruction::from_tuple((
-            self.instruction_cache.get(index) as u8,
-            self.instruction_cache.get(index + 1),
-            self.instruction_cache.get(index + 2),
+            self.instruction_cache.get(index).as_u8(),
+            self.instruction_cache.get(index + 1.into()),
+            self.instruction_cache.get(index + 2.into()),
         ))
     }
 
-    fn load(&self, arg: T) -> Result<T, CpuError> {
+    fn load(&self, arg: T) -> Result<T, CpuError<T>> {
+        unimplemented!();
         match arg {
             0 => Ok(self.reg_zero),
             1..=65535 => Ok(self.data_cache[(arg - 1) as usize]),
@@ -284,7 +284,8 @@ impl<T: Arch + Num> Cpu<T> {
         }
     }
 
-    fn push(&mut self, arg1: u64, arg2: u64) -> Result<(), CpuError> {
+    fn push(&mut self, arg1: T, arg2: T) -> Result<(), CpuError<T>> {
+        unimplemented!();
         match arg1 {
             0 => {
                 self.reg_zero = arg2;
@@ -318,17 +319,17 @@ impl<T: Arch + Num> Cpu<T> {
 
     fn handle_error(
         &mut self,
-        e: CpuError,
+        e: CpuError<T>,
         ignore_errors: bool,
         no_halt_if_error: bool,
         no_debug_info: bool,
-    ) -> Result<(), CpuError> {
+    ) -> Result<(), CpuError<T>> {
         if !ignore_errors {
             if !no_halt_if_error {
                 return Err(e);
             } else {
                 if !no_debug_info {
-                    self.push(420, self.reg_zero)?;
+                    self.push(420.into(), self.reg_zero)?;
                 }
             }
         }
@@ -350,10 +351,10 @@ mod tests {
     }
 }
 
-pub trait Device {
-    fn get_address_space(&self) -> RangeInclusive<u64>;
+pub trait Device<T> {
+    fn get_address_space(&self) -> RangeInclusive<T>;
 
-    fn load(&self, address: u64) -> Result<u64, CpuError>;
+    fn load(&self, address: u64) -> Result<u64, CpuError<T>>;
 
-    fn push(&self, address: u64, value: u64) -> Result<(), CpuError>;
+    fn push(&self, address: u64, value: u64) -> Result<(), CpuError<T>>;
 }

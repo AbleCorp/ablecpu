@@ -1,39 +1,40 @@
-use crate::errors::CpuError;
+use crate::{arch::Arch, errors::CpuError};
 
 #[derive(Debug)]
-pub enum Instruction {
-    NoOp(u64, u64, bool, bool, bool, InstructionSpeed),
-    Load(u64, u64, bool, bool, bool, InstructionSpeed),
-    Copy(u64, u64, bool, bool, bool, InstructionSpeed),
-    Comp(u64, u64, bool, bool, bool, InstructionSpeed),
-    Add(u64, u64, bool, bool, bool, InstructionSpeed),
-    Sub(u64, u64, bool, bool, bool, InstructionSpeed),
-    Mul(u64, u64, bool, bool, bool, InstructionSpeed),
-    Div(u64, u64, bool, bool, bool, InstructionSpeed),
+pub enum Instruction<T: Arch> {
+    NoOp(T, T, bool, bool, bool, InstructionSpeed<T>),
+    Load(T, T, bool, bool, bool, InstructionSpeed<T>),
+    Copy(T, T, bool, bool, bool, InstructionSpeed<T>),
+    Comp(T, T, bool, bool, bool, InstructionSpeed<T>),
+    Add(T, T, bool, bool, bool, InstructionSpeed<T>),
+    Sub(T, T, bool, bool, bool, InstructionSpeed<T>),
+    Mul(T, T, bool, bool, bool, InstructionSpeed<T>),
+    Div(T, T, bool, bool, bool, InstructionSpeed<T>),
 }
 
 #[derive(Debug)]
-pub enum InstructionSpeed {
+pub enum InstructionSpeed<T: Arch> {
     Fast,
     Medium,
     Slow,
     Halt,
+    Unknown(T),
 }
 
-impl InstructionSpeed {
-    fn from_u8(raw: u8) -> Result<InstructionSpeed, CpuError> {
+impl<T: Arch> InstructionSpeed<T> {
+    fn from_u8(raw: u8) -> Result<InstructionSpeed<T>, CpuError<T>> {
         match raw & 0b0000_0011 {
             0 => Ok(InstructionSpeed::Fast),
             1 => Ok(InstructionSpeed::Medium),
             2 => Ok(InstructionSpeed::Slow),
             3 => Ok(InstructionSpeed::Halt),
-            _ => Err(CpuError::IllegalInstructionSpeed(raw as u64)),
+            _ => Err(CpuError::IllegalInstructionSpeed(raw.into())),
         }
     }
 }
 
-impl Instruction {
-    pub fn from_tuple(tuple: (u8, u64, u64)) -> Result<Instruction, CpuError> {
+impl<T: Arch> Instruction<T> {
+    pub fn from_tuple(tuple: (u8, T, T)) -> Result<Instruction<T>, CpuError<T>> {
         let instruction_type = tuple.0 & 0b11100000;
         let ignore_errors = if tuple.0 & 0b00010000 == 0b00010000 {
             true
@@ -118,7 +119,7 @@ impl Instruction {
                 no_debug_info,
                 InstructionSpeed::from_u8(tuple.0)?,
             )),
-            _ => Err(CpuError::IllegalInstruction(tuple.0 as u64)),
+            _ => Err(CpuError::IllegalInstruction(tuple.0.into())),
         }
     }
 }

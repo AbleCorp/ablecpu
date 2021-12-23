@@ -1,9 +1,9 @@
 #[derive(Debug)]
-pub enum CpuError {
-    IllegalState(u64),
-    IllegalInstruction(u64),
-    IllegalInstructionSpeed(u64),
-    DeviceError(u64),
-    AddressNotPopulated(u64),
-    TooManyDevices(u64),
+pub enum CpuError<T> {
+    IllegalState(T),
+    IllegalInstruction(T),
+    IllegalInstructionSpeed(T),
+    DeviceError(T),
+    AddressNotPopulated(T),
+    TooManyDevices(T),
 }
