@@ -1,6 +1,6 @@
 use std::{
     convert::TryInto,
-    ops::{Add, Div, Rem, Sub, Mul},
+    ops::{Add, Div, Mul, Rem, Sub},
 };
 
 pub trait Arch:
