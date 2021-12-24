@@ -1,6 +1,6 @@
 use std::{
     convert::TryInto,
-    ops::{Add, Div, Rem, Sub, Mul},
+    ops::{Add, Div, Mul, Rem, Sub},
 };
 
 pub trait Arch:
@@ -16,11 +16,13 @@ pub trait Arch:
     + std::ops::RemAssign
     + Rem<Output = Self>
     + Clone
+    + Copy
     + Ord
 {
     fn from_be_bytes(b: &[u8]) -> Self;
     fn as_usize(&self) -> usize;
     fn as_u8(&self) -> u8;
+    fn from_i32(i: i32) -> Self;
 }
 
 impl Arch for u64 {
@@ -35,6 +37,10 @@ impl Arch for u64 {
     fn as_u8(&self) -> u8 {
         *self as u8
     }
+
+    fn from_i32(i: i32) -> Self {
+        i as u64
+    }
 }
 impl Arch for u32 {
     fn from_be_bytes(b: &[u8]) -> Self {
@@ -48,6 +54,10 @@ impl Arch for u32 {
     fn as_u8(&self) -> u8 {
         *self as u8
     }
+
+    fn from_i32(i: i32) -> Self {
+        i as u32
+    }
 }
 impl Arch for u16 {
     fn from_be_bytes(b: &[u8]) -> Self {
@@ -60,5 +70,9 @@ impl Arch for u16 {
 
     fn as_u8(&self) -> u8 {
         *self as u8
+    }
+
+    fn from_i32(i: i32) -> Self {
+        i as u16
     }
 }

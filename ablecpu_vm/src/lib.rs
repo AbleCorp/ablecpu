@@ -1,4 +1,4 @@
-use std::{convert::TryInto, ops::RangeInclusive};
+use std::ops::RangeInclusive;
 
 use arch::Arch;
 use errors::CpuError;
@@ -61,7 +61,7 @@ pub struct Cpu<T: Arch> {
 impl<T: Arch> Cpu<T> {
     pub fn new(instructions: Box<[u8]>) -> Cpu<T> {
         Cpu {
-            reg_zero: 65536.into(),
+            reg_zero: T::from_i32(0),
             data_cache: [0.into(); 65535],
             instruction_cache: InstructionCache::new(instructions),
             devices: Vec::new(),
@@ -261,57 +261,55 @@ impl<T: Arch> Cpu<T> {
     }
 
     fn load(&self, arg: T) -> Result<T, CpuError<T>> {
-        unimplemented!();
-        match arg {
+        match arg.as_usize() {
             0 => Ok(self.reg_zero),
-            1..=65535 => Ok(self.data_cache[(arg - 1) as usize]),
-            65536..=131071 => Ok(self.instruction_cache.get(arg - 65536)),
-            address => {
+            1..=65535 => Ok(self.data_cache[(arg - 1.into()).as_usize()]),
+            65536..=131071 => Ok(self.instruction_cache.get(arg - T::from_i32(65536))),
+            _ => {
                 match self
                     .devices
                     .iter()
-                    .filter_map(|dev| match dev.get_address_space().contains(&address) {
+                    .filter_map(|dev| match dev.get_address_space().contains(&arg) {
                         true => Some(dev),
                         false => None,
                     })
-                    .collect::<Vec<&Box<dyn Device>>>()
+                    .collect::<Vec<&Box<dyn Device<T>>>>()
                     .get(0)
                 {
-                    Some(dev) => return dev.load(address),
-                    None => return Err(CpuError::AddressNotPopulated(address)),
+                    Some(dev) => return dev.load(arg),
+                    None => return Err(CpuError::AddressNotPopulated(arg)),
                 }
             }
         }
     }
 
     fn push(&mut self, arg1: T, arg2: T) -> Result<(), CpuError<T>> {
-        unimplemented!();
-        match arg1 {
+        match arg1.as_usize() {
             0 => {
                 self.reg_zero = arg2;
                 Ok(())
             }
             1..=65535 => {
-                self.data_cache[(arg1 - 1) as usize] = arg2;
+                self.data_cache[(arg1 - 1.into()).as_usize()] = arg2;
                 Ok(())
             }
             65536..=131071 => {
-                self.instruction_cache.set(arg1 - 65536, arg2);
+                self.instruction_cache.set(arg1 - T::from_i32(65536), arg2);
                 Ok(())
             }
-            address => {
+            _ => {
                 match self
                     .devices
                     .iter()
-                    .filter_map(|dev| match dev.get_address_space().contains(&address) {
+                    .filter_map(|dev| match dev.get_address_space().contains(&arg1) {
                         true => Some(dev),
                         false => None,
                     })
-                    .collect::<Vec<&Box<dyn Device>>>()
+                    .collect::<Vec<&Box<dyn Device<T>>>>()
                     .get(0)
                 {
-                    Some(dev) => return dev.push(address, arg2),
-                    None => return Err(CpuError::AddressNotPopulated(address)),
+                    Some(dev) => return dev.push(arg1, arg2),
+                    None => return Err(CpuError::AddressNotPopulated(arg1)),
                 }
             }
         }
@@ -329,7 +327,7 @@ impl<T: Arch> Cpu<T> {
                 return Err(e);
             } else {
                 if !no_debug_info {
-                    self.push(420.into(), self.reg_zero)?;
+                    self.push(T::from_i32(420), self.reg_zero)?;
                 }
             }
         }
@@ -338,10 +336,9 @@ impl<T: Arch> Cpu<T> {
 }
 
 mod tests {
-    use crate::Cpu;
-
     #[test]
     fn it_works() {
+        use crate::Cpu;
         let mut cstm_vec: Vec<u8> = vec![1, 0, 0, 0, 0, 0, 0, 0, 8];
         let mut fill_vec: Vec<u8> = vec![0; 371356];
         cstm_vec.append(&mut fill_vec);
@@ -354,7 +351,7 @@ mod tests {
 pub trait Device<T> {
     fn get_address_space(&self) -> RangeInclusive<T>;
 
-    fn load(&self, address: u64) -> Result<u64, CpuError<T>>;
+    fn load(&self, address: T) -> Result<T, CpuError<T>>;
 
-    fn push(&self, address: u64, value: u64) -> Result<(), CpuError<T>>;
+    fn push(&self, address: T, value: T) -> Result<(), CpuError<T>>;
 }
