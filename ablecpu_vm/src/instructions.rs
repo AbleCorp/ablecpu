@@ -12,6 +12,7 @@ pub enum Instruction<T: Arch> {
     Div(T, T, bool, bool, bool, InstructionSpeed<T>),
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 pub enum InstructionSpeed<T: Arch> {
     Fast,

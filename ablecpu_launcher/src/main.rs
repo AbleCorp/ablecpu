@@ -9,9 +9,9 @@ fn main() {
     match args.get(1) {
         None => print_help(""),
         Some(command) => {
-            let file = find_file(&args);
+            let _file = find_file(&args);
             match command.as_str() {
-                "run" => run::main(args, file),
+                "run" => run::main(),
                 _ => print_help(""),
             }
         }

@@ -2,72 +2,34 @@ use std::ops::RangeInclusive;
 
 use arch::Arch;
 use errors::CpuError;
+use instruction_cache::InstructionCache;
 use instructions::Instruction;
 
 mod arch;
+mod bus;
 pub mod errors;
+mod instruction_cache;
 mod instructions;
 
 pub fn get_version() -> &'static str {
     env!("CARGO_PKG_VERSION")
 }
 
-pub struct InstructionCache<T: Arch> {
-    instructions: Box<[(u8, T, T)]>,
-}
-
-impl<T: Arch + Clone> InstructionCache<T> {
-    fn new(raw: Box<[u8]>) -> InstructionCache<T> {
-        let mut i: usize = 0;
-        let mut assembled: Box<[(u8, T, T)]> =
-            vec![(0 as u8, 0.into(), 0.into()); 21845].into_boxed_slice();
-        while i < 371365 {
-            let inst = raw[i];
-            let arg_one = T::from_be_bytes(&raw[i + 1..=i + 8]);
-            let arg_two = T::from_be_bytes(&raw[i + 9..=i + 16]);
-            assembled[i / 17] = (inst, arg_one, arg_two);
-            i += 17;
-        }
-
-        InstructionCache {
-            instructions: assembled,
-        }
-    }
-
-    pub fn get(&self, index: T) -> T {
-        match (index % 3.into()).as_u8() {
-            0 => self.instructions[(index / 3.into()).as_usize()].0.into(),
-            1 => self.instructions[(index / 3.into()).as_usize()].1,
-            _ => self.instructions[(index / 3.into()).as_usize()].2,
-        }
-    }
-
-    pub fn set(&mut self, index: T, value: T) {
-        match (index % 3.into()).as_u8() {
-            0 => self.instructions[(index / 3.into()).as_usize()].0 = value.as_u8(),
-            1 => self.instructions[(index / 3.into()).as_usize()].1 = value,
-            _ => self.instructions[(index / 3.into()).as_usize()].2 = value,
-        }
-    }
-}
-
 pub struct Cpu<T: Arch> {
+    REG_ZERO: T,
+    DATA_START: T,
+    DATA_END: T,
+    INSTRUCTION_START: T,
+    INSTRUCTION_END: T,
+    DATA_SIZE: T,
+    INSTRUCTION_SIZE: T,
     reg_zero: T,
-    data_cache: [T; 65535],
+    data_cache: Vec<T>,
     pub instruction_cache: InstructionCache<T>,
     devices: Vec<Box<dyn Device<T>>>,
 }
 
 impl<T: Arch> Cpu<T> {
-    pub fn new(instructions: Box<[u8]>) -> Cpu<T> {
-        Cpu {
-            reg_zero: T::from_i32(0),
-            data_cache: [0.into(); 65535],
-            instruction_cache: InstructionCache::new(instructions),
-            devices: Vec::new(),
-        }
-    }
-
     pub fn tick(&mut self) -> Result<(), CpuError<T>> {
         let instruction = self.get_instruction(self.reg_zero)?;
 
@@ -260,61 +222,6 @@ impl<T: Arch> Cpu<T> {
         ))
     }
 
-    fn load(&self, arg: T) -> Result<T, CpuError<T>> {
-        match arg.as_usize() {
-            0 => Ok(self.reg_zero),
-            1..=65535 => Ok(self.data_cache[(arg - 1.into()).as_usize()]),
-            65536..=131071 => Ok(self.instruction_cache.get(arg - T::from_i32(65536))),
-            _ => {
-                match self
-                    .devices
-                    .iter()
-                    .filter_map(|dev| match dev.get_address_space().contains(&arg) {
-                        true => Some(dev),
-                        false => None,
-                    })
-                    .collect::<Vec<&Box<dyn Device<T>>>>()
-                    .get(0)
-                {
-                    Some(dev) => return dev.load(arg),
-                    None => return Err(CpuError::AddressNotPopulated(arg)),
-                }
-            }
-        }
-    }
-
-    fn push(&mut self, arg1: T, arg2: T) -> Result<(), CpuError<T>> {
-        match arg1.as_usize() {
-            0 => {
-                self.reg_zero = arg2;
-                Ok(())
-            }
-            1..=65535 => {
-                self.data_cache[(arg1 - 1.into()).as_usize()] = arg2;
-                Ok(())
-            }
-            65536..=131071 => {
-                self.instruction_cache.set(arg1 - T::from_i32(65536), arg2);
-                Ok(())
-            }
-            _ => {
-                match self
-                    .devices
-                    .iter()
-                    .filter_map(|dev| match dev.get_address_space().contains(&arg1) {
-                        true => Some(dev),
-                        false => None,
-                    })
-                    .collect::<Vec<&Box<dyn Device<T>>>>()
-                    .get(0)
-                {
-                    Some(dev) => return dev.push(arg1, arg2),
-                    None => return Err(CpuError::AddressNotPopulated(arg1)),
-                }
-            }
-        }
-    }
-
     fn handle_error(
         &mut self,
         e: CpuError<T>,
@@ -335,15 +242,34 @@ impl<T: Arch> Cpu<T> {
     }
 }
 
+impl<T: Arch> Cpu<T> {
+    pub fn new(instructions: Box<[u8]>, devices: Vec<Box<dyn Device<T>>>) -> Cpu<T> {
+        Cpu {
+            reg_zero: 0.into(),
+            data_cache: vec![0.into(); T::DATA_SIZE().as_usize()],
+            instruction_cache: InstructionCache::new(instructions),
+            devices,
+            REG_ZERO: 0.into(),
+            DATA_START: 1.into(),
+            DATA_END: T::DATA_SIZE(),
+            INSTRUCTION_START: T::DATA_SIZE() + 1.into(),
+            INSTRUCTION_END: T::DATA_SIZE() + 1.into() + T::INSTRUCTION_SIZE(),
+            DATA_SIZE: T::DATA_SIZE(),
+            INSTRUCTION_SIZE: T::INSTRUCTION_SIZE(),
+        }
+    }
+}
+
 mod tests {
+    use crate::Cpu;
+
     #[test]
     fn it_works() {
-        use crate::Cpu;
         let mut cstm_vec: Vec<u8> = vec![1, 0, 0, 0, 0, 0, 0, 0, 8];
-        let mut fill_vec: Vec<u8> = vec![0; 371356];
+        let mut fill_vec: Vec<u8> = vec![0; 371365];
         cstm_vec.append(&mut fill_vec);
 
-        let test_cpu: Cpu<u64> = super::Cpu::new(cstm_vec.into_boxed_slice());
+        let test_cpu: Cpu<u16> = super::Cpu::new(cstm_vec.into_boxed_slice(), Vec::new());
         println!("{:?}", test_cpu.instruction_cache.instructions[0]);
     }
 }
