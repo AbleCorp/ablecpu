@@ -69,3 +69,4 @@ Address Space  - Name              - Explanation
 65536 - 131071 - Instruction Cache - Used to store instructions
 131072         - RAM               - Place for the RAM controller
 131073+        - Devices           - Place for additional devices
+```
