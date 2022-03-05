@@ -33,6 +33,11 @@ impl<T: Arch> Cpu<T> {
     pub fn tick(&mut self) -> Result<(), CpuError<T>> {
         let instruction = self.get_instruction(self.reg_zero)?;
 
+        //dbg!(self.reg_zero);
+        dbg!(&self.data_cache[0..=2]);
+
+        //dbg!(&instruction);
+
         match instruction {
             Instruction::NoOp(_, _, _, _, _, _) => {}
             Instruction::Load(arg1, arg2, ignore_errors, no_halt_if_error, no_debug_info, _) => {
@@ -210,11 +215,11 @@ impl<T: Arch> Cpu<T> {
                 }
             }
         }
-        self.reg_zero += 17.into();
+        self.reg_zero += 3.into();
         Ok(())
     }
 
-    fn get_instruction(&self, index: T) -> Result<Instruction<T>, CpuError<T>> {
+    pub fn get_instruction(&self, index: T) -> Result<Instruction<T>, CpuError<T>> {
         Instruction::from_tuple((
             self.instruction_cache.get(index).as_u8(),
             self.instruction_cache.get(index + 1.into()),
@@ -253,7 +258,7 @@ impl<T: Arch> Cpu<T> {
             DATA_START: 1.into(),
             DATA_END: T::DATA_SIZE(),
             INSTRUCTION_START: T::DATA_SIZE() + 1.into(),
-            INSTRUCTION_END: T::DATA_SIZE() + 1.into() + T::INSTRUCTION_SIZE(),
+            INSTRUCTION_END: T::DATA_SIZE() + T::INSTRUCTION_SIZE(),
             DATA_SIZE: T::DATA_SIZE(),
             INSTRUCTION_SIZE: T::INSTRUCTION_SIZE(),
         }

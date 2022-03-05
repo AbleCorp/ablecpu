@@ -29,12 +29,15 @@ impl<T: Arch> Cpu<T> {
     }
 
     pub fn push(&mut self, arg1: T, arg2: T) -> Result<(), CpuError<T>> {
+        //dbg!(arg1, arg2);
+        //dbg!(self.reg_zero);
         match arg1 {
             _ if self.REG_ZERO == arg1 => {
                 self.reg_zero = arg2;
                 Ok(())
             }
             _ if (self.DATA_START..=self.DATA_END).contains(&arg1) => {
+                
                 self.data_cache[(arg1 - self.DATA_START).as_usize()] = arg2;
                 Ok(())
             }

@@ -1,9 +1,7 @@
 use std::{
     convert::TryInto,
-    ops::{Add, Div, Mul, Rem, Sub},
+    ops::{Add, Div, Mul, Rem, Sub}, fmt::Debug,
 };
-
-use crate::Cpu;
 
 pub trait Arch:
     From<u8>
@@ -20,6 +18,7 @@ pub trait Arch:
     + Clone
     + Copy
     + Ord
+    + Debug
 {
     fn DATA_SIZE() -> Self;
     fn INSTRUCTION_SIZE() -> Self;

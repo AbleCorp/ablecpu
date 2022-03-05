@@ -8,8 +8,11 @@ pub struct InstructionCache<T: Arch> {
 
 impl<T: Arch + Clone> InstructionCache<T> {
     pub fn get(&self, index: T) -> T {
+        //dbg!(index);
         match (index % 3.into()).as_u8() {
-            0 => self.instructions[(index / 3.into()).as_usize()].0.into(),
+            0 => {
+                self.instructions[(index / 3.into()).as_usize()].0.into()
+                },
             1 => self.instructions[(index / 3.into()).as_usize()].1,
             _ => self.instructions[(index / 3.into()).as_usize()].2,
         }
@@ -82,8 +85,8 @@ impl<T: Arch> InstructionCache<T> {
     pub fn new(raw: Box<[u8]>) -> InstructionCache<T> {
         let mut i: usize = 0;
         let mut assembled: Box<[(u8, T, T)]> =
-            vec![(0 as u8, 0.into(), 0.into()); 21845].into_boxed_slice();
-        while i < 371365 {
+            vec![(0 as u8, 0.into(), 0.into()); 5461].into_boxed_slice();
+        while i < 27305 {
             let inst = raw[i];
             let arg_one = T::from_be_bytes(
                 raw[i + 1..=i + T::BYTE_SIZE().as_usize()]
@@ -91,13 +94,13 @@ impl<T: Arch> InstructionCache<T> {
                     .unwrap(),
             );
             let arg_two = T::from_be_bytes(
-                raw[i + 1 + T::BYTE_SIZE().as_usize()
-                    ..=(T::BYTE_SIZE() + T::BYTE_SIZE()).as_usize()]
+                raw[(i + 1 + T::BYTE_SIZE().as_usize())
+                    ..=(i + T::BYTE_SIZE().as_usize() + T::BYTE_SIZE().as_usize())]
                     .try_into()
                     .unwrap(),
             );
-            assembled[i / 9] = (inst, arg_one, arg_two);
-            i += 9;
+            assembled[i / 5] = (inst, arg_one, arg_two);
+            i += 5;
         }
 
         InstructionCache {

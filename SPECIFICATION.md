@@ -24,11 +24,12 @@ Binary - Name - Explanation
 000    - NoOP - Does nothing
 001    - Load - Stores value A in memory on address B
 010    - Copy - Copys the value from memory address A to memory address B
-011    - Add  - Adds the value from memory address A to value from memory address B and stores the Result in memory at address A
-100    - Sub  - Subtracts the value from memory address B from value from memory address A and stores the Result in memory at address A
-101    - Mul  - Multiplies the value from memory address A with value from memory address B and stores the Result in memory at address A
-110    - Div  - Divides the value from memory address A by value from memory address B and stores the Result in memory at address A
-111    - Comp - Compares the value from memory address A with value from memory address B and skips x instructions following theese rules:
+011    - Comp - Compares the value from memory address A with value from memory address B and skips x instructions following the jumping rules
+100    - Add  - Adds the value from memory address A to value from memory address B and stores the Result in memory at address A
+101    - Sub  - Subtracts the value from memory address B from value from memory address A and stores the Result in memory at address A
+110    - Mul  - Multiplies the value from memory address A with value from memory address B and stores the Result in memory at address A
+111    - Div  - Divides the value from memory address A by value from memory address B and stores the Result in memory at address A
+
 ```
 
 ### Jumping Rules
