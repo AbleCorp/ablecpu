@@ -1,6 +1,5 @@
 [workspace]
 
 members = [
-    "ablecpu_launcher",
-    "ablecpu_vm"
+    "ablecpu"
 ]
