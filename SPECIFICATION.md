@@ -23,4 +23,4 @@ As stated previously, the first byte is split into 3 parts like so:
 | Halt on Error | Store debug info on error | First Argument Signed | Second Argument Signed | OPCode |
 | --- | --- | --- | --- | --- |
 | First bit | Second bit | Third bit | Fourth bit | Last 4 bits |
-| First bit | Second bit | Third bit | Fourth bit | Last 4 bits |
+| If this bit is set to true it will stop execution upon any kind of error | If a error is detected store some info in a special location | Defines if the first argument should be treated as a signed number| Defines if the second argument should be treated a sa signed number| What to do lol|
