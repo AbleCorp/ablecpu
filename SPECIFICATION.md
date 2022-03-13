@@ -1,73 +1,25 @@
 # DISCLAIMER
-## This is a hobby project I used to better understand and practise VM's. Do not use it in any production environment.
 
-# AbleCpu Specification
-## Core Concepts
+## THIS CODEBASE SHOULD IN NO CASE BE USED IN ANY KIND OF PRODUCTION ENVIRONMENT. IT IS UNSTABLE AND NO SUPPORT IS PROVIDED.
 
-There are no registers, everything is mapped onto a 1 dimensional memory space also containing the bus for connecting to external devices.
-Standard design is made for 16-bit but it should be scalable from 32 bit to anything above 64.
+# DISCLAIMER END
 
-## Instructions
+## Introduction
 
-Instructions consist of 4 parts:
+AbleCPU aims to provide a simple and reduced ISA, while also maintaining ease of use and flexibility.
+One of the core concepts is, that *everything* is memory mapped.
+So there are no registers, no device bus and no special instructions to deal with them.
+NOTE: This version specifies a 8-bit CPU, but it is possible to extend it to 16-bit and 32-bit.
 
-```
-InstructionType (3 bits)   - stores what instruction it is
-InstructionFlags (5 bits)  - stores additional information about how the instruction should be executed
-InstructionDataA (64 bits) - stores data to be used by the instruction
-InstructionDataB (64 bits) - stores data to be used by the instruction
-```
-### InstructionType
+### Instructions
 
-```
-Binary - Name - Explanation
-000    - NoOP - Does nothing
-001    - Load - Stores value A in memory on address B
-010    - Copy - Copys the value from memory address A to memory address B
-011    - Comp - Compares the value from memory address A with value from memory address B and skips x instructions following the jumping rules
-100    - Add  - Adds the value from memory address A to value from memory address B and stores the Result in memory at address A
-101    - Sub  - Subtracts the value from memory address B from value from memory address A and stores the Result in memory at address A
-110    - Mul  - Multiplies the value from memory address A with value from memory address B and stores the Result in memory at address A
-111    - Div  - Divides the value from memory address A by value from memory address B and stores the Result in memory at address A
+Instructions consist of 24 bits.
+The first bit is responsible for the OPCode, signing information and error checking policies.
+The remaining 16 bits are split into two 8 bit numbers which we will call "arguments" from now on.
+Depending on the OPCode, the arguments can function slightly differently.
 
-```
+As stated previously, the first byte is split into 3 parts like so:
 
-### Jumping Rules
-
-```
-A = B: Skip 0 instructions
-A < B: Skip 1 instruction
-A > B: Skip 2 instructions
-```
-
-### Instruction Flags
-
-```
-1-1-1 - 11
-| | |   Instruction execution speed (00 highest, 11 lowest)
-| | don't store debug info
-| If 1: don't halt if error
-If 1: don't do error handling
-```
-
-### Bus Sturcture
-
-16-bit bus:
-```
-Address Space  - Name              - Explanation
-0              - rego_zero         - Used to store the current instruction position
-1 - 16383      - Data Cache        - Used to store data
-16384 - 32767  - Instruction Cache - Used to store instructions
-32768          - RAM               - Place for the RAM controller
-32769+         - Devices           - Place for additional devices
-```
-
-32-bit bus (64-bit):
-```
-Address Space  - Name              - Explanation
-0              - rego_zero         - Used to store the current instruction position
-1 - 65535      - Data Cache        - Used to store data
-65536 - 131071 - Instruction Cache - Used to store instructions
-131072         - RAM               - Place for the RAM controller
-131073+        - Devices           - Place for additional devices
-```
+| Halt on Error | Store debug info on error | 1. Argument Signed | 2. Argument Signed | OPCode |
+| --- | --- | --- | --- | --- |
+| First bit | Second bit | Third bit | Fourth bit | Last 4 bits |
