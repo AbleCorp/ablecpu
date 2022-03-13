@@ -21,6 +21,6 @@ Depending on the OPCode, the arguments can function slightly differently.
 As stated previously, the first byte is split into 3 parts like so:
 
 | Halt on Error | Store debug info on error | First Argument Signed | Second Argument Signed | OPCode |
-| --- | --- | --- | --- | --- |
+| --- | --- | --- | --- | --- |
 | First bit | Second bit | Third bit | Fourth bit | Last 4 bits |
 | First bit | Second bit | Third bit | Fourth bit | Last 4 bits |
