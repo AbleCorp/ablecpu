@@ -24,3 +24,38 @@ As stated previously, the first byte is split into 3 parts like so:
 | --- | --- | --- | --- | --- |
 | First bit | Second bit | Third bit | Fourth bit | Last 4 bits |
 | If this bit is set to true it will stop execution upon any kind of error | If a error is detected store some info in a special location | Defines if the first argument should be treated as a signed number| Defines if the second argument should be treated a sa signed number| What to do lol|
+
+### OpCodes
+
+| OpCode | Description | Pseudo Code |
+| --- | --- | --- |
+| NoOP | Do nothing | `nop` |
+| And | Bitwise AND | `a = a & b` |
+| Or | Bitwise OR | `a = a | b` |
+| Not | Bitwise NOT | `a = ~a` |
+| Add | Addition | `a = a + b` |
+| Sub | Subtraction | `a = a - b` |
+| Mul | Multiplication | `a = a * b` |
+| Div | Division | `a = a / b` |
+| SL | Shift Left | `a = a << b` |
+| SR | Shift Right | `a = a >> b` |
+| RL | Rotate Left | `a = a << b | a >> (8 - b)` |
+| RR | Rotate Right | `a = a >> b | a << (8 - b)` |
+| CompEq | Compare Equal | `a = a == b` |
+| CompGt | Compare Greater Than | `a = a > b` |
+| CompLt | Compare Less Than | `a = a < b` |
+
+### Memory Map
+
+| Address | Description |
+| --- | --- |
+| 0 | Program Counter |
+| 1-127 | Instruction Memory |
+| 128-191 | Data Memory |
+| 192-255 | Devices |
+
+### Device Ideas
+
+| Address | Name | Description |
+| --- | --- | --- |
+| 192 | Goto Page (Instructions) | Set the page to X (If you want paging)
