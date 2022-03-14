@@ -14,7 +14,7 @@ NOTE: This version specifies a 8-bit CPU, but it is possible to extend it to 16-
 ### Instructions
 
 Instructions consist of 24 bits.
-The first bit is responsible for the OPCode, signing information and error checking policies.
+The first byte is responsible for the OPCode, signing information and error checking policies.
 The remaining 16 bits are split into two 8 bit numbers which we will call "arguments" from now on.
 Depending on the OPCode, the arguments can function slightly differently.
 
@@ -25,25 +25,34 @@ As stated previously, the first byte is split into 3 parts like so:
 | First bit | Second bit | Third bit | Fourth bit | Last 4 bits |
 | If this bit is set to true it will stop execution upon any kind of error | If a error is detected store some info in a special location | Defines if the first argument should be treated as a signed number| Defines if the second argument should be treated a sa signed number| What to do lol|
 
+The instruction will always load the arguments from memory and store the result in memory.
+
 ### OpCodes
 
-| OpCode | Description | Pseudo Code |
-| --- | --- | --- |
-| NoOP | Do nothing | `nop` |
-| And | Bitwise AND | `a = a & b` |
-| Or | Bitwise OR | `a = a | b` |
-| Not | Bitwise NOT | `a = ~a` |
-| Add | Addition | `a = a + b` |
-| Sub | Subtraction | `a = a - b` |
-| Mul | Multiplication | `a = a * b` |
-| Div | Division | `a = a / b` |
-| SL | Shift Left | `a = a << b` |
-| SR | Shift Right | `a = a >> b` |
-| RL | Rotate Left | `a = a << b | a >> (8 - b)` |
-| RR | Rotate Right | `a = a >> b | a << (8 - b)` |
-| CompEq | Compare Equal | `a = a == b` |
-| CompGt | Compare Greater Than | `a = a > b` |
-| CompLt | Compare Less Than | `a = a < b` |
+OpCodes are designed to be quite simple. They are just a number which defines what to do.
+
+| Binary | OpCode | Description | Pseudo Code |
+| --- | --- | --- | --- |
+| 0000 | NoOP | Do nothing | `nop` |
+| 0001 | And | Bitwise AND | `a = a & b` |
+| 0010 | Or | Bitwise OR | `a = a | b` |
+| 0011 | Not | Bitwise NOT | `a = ~a` |
+| 0100 | Add | Addition | `a = a + b` |
+| 0101 | Sub | Subtraction | `a = a - b` |
+| 0110 | Mul | Multiplication | `a = a * b` |
+| 0111 | Div | Division | `a = a / b` |
+| 1000 | SL | Shift Left | `a = a << 1` |
+| 1001 | SR | Shift Right | `a = a >> 1` |
+| 1010 | RL | Rotate Left | `a = a <<< 1` |
+| 1011 | RR | Rotate Right | `a = a >>> 1` |
+| 1100 | Copy | Copy value | `b = a` |
+| 1101 | CompEq | Compare Equal | `a == b` |
+| 1110 | CompGt | Compare Greater Than | `a > b` |
+| 1111 | CompLt | Compare Less Than | `a < b` |
+
+### Comparison
+
+If a comparison is false, the next instruction is skipped.
 
 ### Memory Map
 
@@ -59,3 +68,6 @@ As stated previously, the first byte is split into 3 parts like so:
 | Address | Name | Description |
 | --- | --- | --- |
 | 192 | Goto Page (Instructions) | Set the page to X (If you want paging)
+| 193 | Goto Page (Data) | Set the page to X (If you want paging) |
+| 194 | ASCII Output | Output a character to the terminal |
+| 195 | ASCII Input | Read a character from the terminal |
