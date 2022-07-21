@@ -35,7 +35,7 @@ OpCodes are designed to be quite simple. They are just a number which defines wh
 | --- | --- | --- | --- |
 | 0000 | NoOP | Do nothing | `nop` |
 | 0001 | And | Bitwise AND | `a = a & b` |
-| 0010 | Or | Bitwise OR | `a = a | b` |
+| 0010 | Or | Bitwise OR | `a = a \| b` |
 | 0011 | Not | Bitwise NOT | `a = ~a` |
 | 0100 | Add | Addition | `a = a + b` |
 | 0101 | Sub | Subtraction | `a = a - b` |
