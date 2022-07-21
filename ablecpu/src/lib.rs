@@ -28,9 +28,8 @@ impl CPU {
         ])
     }
 
-    #[allow(unused_variables)]
     fn process(&mut self, inst: Instruction) -> Halted {
-        let result = match inst {
+        match inst {
             Instruction::NoOp(_, _, _, _) => (),
             Instruction::And(_, _, _, _, arg1, arg2) => {
                 let data1 = self.load(arg1);
@@ -159,21 +158,21 @@ impl CPU {
             Instruction::CompEq(_, _, _, _, arg1, arg2) => {
                 let data1 = self.load(arg1);
                 let data2 = self.load(arg2);
-                if !(data1 == data2) {
+                if data1 != data2 {
                     self.reg_zero += 3;
                 }
             }
             Instruction::CompGt(_, _, _, _, arg1, arg2) => {
                 let data1 = self.load(arg1);
                 let data2 = self.load(arg2);
-                if !(data1 > data2) {
+                if data1 <= data2 {
                     self.reg_zero += 3;
                 }
             }
             Instruction::CompLt(_, _, _, _, arg1, arg2) => {
                 let data1 = self.load(arg1);
                 let data2 = self.load(arg2);
-                if !(data1 < data2) {
+                if data1 >= data2 {
                     self.reg_zero += 3;
                 }
             }
