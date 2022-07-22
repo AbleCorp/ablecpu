@@ -1,8 +1,8 @@
 pub struct CPU {
-    reg_zero: u8,
-    inst_mem: [u8; 127],
-    data_mem: [u8; 64],
-    devices: Vec<Box<dyn Device>>,
+    pub reg_zero: u8,
+    pub inst_mem: [u8; 127],
+    pub data_mem: [u8; 64],
+    pub devices: Vec<Box<dyn Device>>,
 }
 
 impl CPU {
@@ -20,7 +20,7 @@ impl CPU {
         self.process(inst)
     }
 
-    fn fetch(&self) -> Instruction {
+    pub fn fetch(&self) -> Instruction {
         Instruction::from_3bytes([
             self.inst_mem[self.reg_zero as usize],
             self.inst_mem[(self.reg_zero + 1) as usize],
@@ -50,22 +50,22 @@ impl CPU {
                     (true, true) => {
                         let data1 = i8::from_be_bytes([self.load(arg1)]);
                         let data2 = i8::from_be_bytes([self.load(arg2)]);
-                        self.push((data1 + data2) as u8, arg1);
+                        self.push(arg1, (data1 + data2) as u8);
                     }
                     (true, false) => {
                         let data1 = i8::from_be_bytes([self.load(arg1)]);
                         let data2 = self.load(arg2);
-                        self.push((data1 as i16 + data2 as i16) as u8, arg1);
+                        self.push(arg1, (data1 as i16 + data2 as i16) as u8);
                     }
                     (false, true) => {
                         let data1 = self.load(arg1);
                         let data2 = i8::from_be_bytes([self.load(arg2)]);
-                        self.push((data1 as i16 + data2 as i16) as u8, arg1);
+                        self.push(arg1, (data1 as i16 + data2 as i16) as u8);
                     }
                     (false, false) => {
                         let data1 = self.load(arg1);
                         let data2 = self.load(arg2);
-                        self.push(data1 + data2, arg1);
+                        self.push(arg1,data1 + data2);
                     }
                 };
             }
@@ -73,66 +73,66 @@ impl CPU {
                 (true, true) => {
                     let data1 = i8::from_be_bytes([self.load(arg1)]);
                     let data2 = i8::from_be_bytes([self.load(arg2)]);
-                    self.push((data1 - data2) as u8, arg1);
+                    self.push(arg1, (data1 - data2) as u8);
                 }
                 (true, false) => {
                     let data1 = i8::from_be_bytes([self.load(arg1)]);
                     let data2 = self.load(arg2);
-                    self.push((data1 as i16 - data2 as i16) as u8, arg1);
+                    self.push(arg1, (data1 as i16 - data2 as i16) as u8);
                 }
                 (false, true) => {
                     let data1 = self.load(arg1);
                     let data2 = i8::from_be_bytes([self.load(arg2)]);
-                    self.push((data1 as i16 - data2 as i16) as u8, arg1);
+                    self.push(arg1, (data1 as i16 - data2 as i16) as u8);
                 }
                 (false, false) => {
                     let data1 = self.load(arg1);
                     let data2 = self.load(arg2);
-                    self.push(data1 - data2, arg1);
+                    self.push(arg1, data1 - data2);
                 }
             },
             Instruction::Mul(_, _, sign1, sign2, arg1, arg2) => match (sign1, sign2) {
                 (true, true) => {
                     let data1 = i8::from_be_bytes([self.load(arg1)]);
                     let data2 = i8::from_be_bytes([self.load(arg2)]);
-                    self.push((data1 * data2) as u8, arg1);
+                    self.push(arg1, (data1 * data2) as u8);
                 }
                 (true, false) => {
                     let data1 = i8::from_be_bytes([self.load(arg1)]);
                     let data2 = self.load(arg2);
-                    self.push((data1 as i16 * data2 as i16) as u8, arg1);
+                    self.push(arg1, (data1 as i16 * data2 as i16) as u8);
                 }
                 (false, true) => {
                     let data1 = self.load(arg1);
                     let data2 = i8::from_be_bytes([self.load(arg2)]);
-                    self.push((data1 as i16 * data2 as i16) as u8, arg1);
+                    self.push(arg1, (data1 as i16 * data2 as i16) as u8);
                 }
                 (false, false) => {
                     let data1 = self.load(arg1);
                     let data2 = self.load(arg2);
-                    self.push(data1 * data2, arg1);
+                    self.push(arg1, data1 * data2);
                 }
             },
             Instruction::Div(_, _, sign1, sign2, arg1, arg2) => match (sign1, sign2) {
                 (true, true) => {
                     let data1 = i8::from_be_bytes([self.load(arg1)]);
                     let data2 = i8::from_be_bytes([self.load(arg2)]);
-                    self.push((data1 / data2) as u8, arg1);
+                    self.push(arg1, (data1 / data2) as u8);
                 }
                 (true, false) => {
                     let data1 = i8::from_be_bytes([self.load(arg1)]);
                     let data2 = self.load(arg2);
-                    self.push((data1 as i16 / data2 as i16) as u8, arg1);
+                    self.push(arg1, (data1 as i16 / data2 as i16) as u8);
                 }
                 (false, true) => {
                     let data1 = self.load(arg1);
                     let data2 = i8::from_be_bytes([self.load(arg2)]);
-                    self.push((data1 as i16 / data2 as i16) as u8, arg1);
+                    self.push(arg1, (data1 as i16 / data2 as i16) as u8);
                 }
                 (false, false) => {
                     let data1 = self.load(arg1);
                     let data2 = self.load(arg2);
-                    self.push(data1 / data2, arg1);
+                    self.push(arg1, data1 / data2);
                 }
             },
             Instruction::SL(_, _, _, _, arg1) => {
@@ -191,6 +191,7 @@ impl CPU {
     }
 
     fn push(&mut self, addr: u8, data: u8) {
+        println!("From push(): addr:{}, data:{}", addr, data);
         match addr {
             0 => self.reg_zero = data,
             1..=127 => self.inst_mem[addr as usize] = data,
@@ -202,6 +203,7 @@ impl CPU {
 
 pub trait Device {}
 
+#[derive(Debug)]
 pub enum Instruction {
     NoOp(bool, bool, bool, bool),
     And(bool, bool, bool, bool, u8, u8),
