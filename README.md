@@ -3,6 +3,9 @@
 
 This is a repo containing both the library and the launcher for the ableCPU emulator (vm)
 
+The main development of this project is done at [AbleHub](https://git.ablecorp.us/AbleCpu).
+The github repositiories are just mirrors for legacy and SEO reasons.
+
 AbleCPU is a project only done for learning purposes and should probably not be used productively.
 
 ## License
