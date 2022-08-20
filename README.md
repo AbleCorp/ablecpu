@@ -10,4 +10,4 @@ AbleCPU is a project only done for learning purposes and should probably not be 
 
 ## License
 
-The entirety of the the code is licensed under the MIT license.
+The entirety of the the code is licensed under the GPLv3 license.
